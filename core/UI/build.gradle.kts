@@ -38,17 +38,26 @@ kotlin {
 
             implementation("io.coil-kt.coil3:coil-compose:3.3.0")
             implementation("io.coil-kt.coil3:coil-svg:3.0.4")
-            implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
+            implementation("io.coil-kt.coil3:coil-network-ktor3:3.3.0")
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
         }
 
         androidMain.dependencies {
             implementation("androidx.activity:activity-compose:1.9.0")
+            implementation("io.ktor:ktor-client-okhttp:3.4.0")
         }
 
 
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
+
+            implementation("io.ktor:ktor-client-java:3.4.0")
+        }
+
+        if (isMac) {
+            iosMain.dependencies {
+                implementation("io.ktor:ktor-client-darwin:3.4.0")
+            }
         }
     }
 }
