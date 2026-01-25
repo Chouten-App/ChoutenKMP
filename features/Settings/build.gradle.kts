@@ -21,7 +21,7 @@ kotlin {
             iosSimulatorArm64()
         ).forEach { iosTarget ->
             iosTarget.binaries.framework {
-                baseName = "Repo"
+                baseName = "Settings"
                 isStatic = true
             }
         }
@@ -54,7 +54,7 @@ kotlin {
 }
 
 android {
-    namespace = "dev.chouten.features.repo"
+    namespace = "dev.chouten.features.settings"
     compileSdk = 34
 
     defaultConfig {

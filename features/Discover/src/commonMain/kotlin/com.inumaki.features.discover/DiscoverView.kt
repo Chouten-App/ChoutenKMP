@@ -10,7 +10,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.inumaki.core.ui.model.GlobalState
-import com.inumaki.features.discover.model.DiscoverList
 
 @Composable
 fun DiscoverView(viewModel: DiscoverViewModel) {

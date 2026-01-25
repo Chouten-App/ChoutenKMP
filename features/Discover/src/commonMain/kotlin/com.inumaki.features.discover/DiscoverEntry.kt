@@ -7,6 +7,7 @@ import androidx.navigation.toRoute
 import com.inumaki.core.ui.model.AppRoute
 import com.inumaki.core.ui.model.DiscoverRoute
 import com.inumaki.core.ui.model.FeatureEntry
+import com.inumaki.core.ui.model.HomeRoute
 import com.inumaki.core.ui.model.NavigationScope
 import com.inumaki.core.ui.model.TopBarAction
 import com.inumaki.core.ui.model.TopBarConfig
@@ -22,6 +23,7 @@ class DiscoverEntry: FeatureEntry, UiConfigProvider {
         val discoverVm = navScope.viewModelStore.get("discover") { DiscoverViewModel() }
         builder.composable<DiscoverRoute> { DiscoverView(discoverVm) }
     }
+    override fun getRoute(): AppRoute = DiscoverRoute
 
     override fun tryCreateRoute(entry: androidx.navigation.NavBackStackEntry): AppRoute? {
         val routeName = entry.destination.route ?: return null

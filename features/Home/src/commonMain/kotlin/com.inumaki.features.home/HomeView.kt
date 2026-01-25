@@ -1,4 +1,4 @@
-package com.inumaki.features.discover
+package com.inumaki.features.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

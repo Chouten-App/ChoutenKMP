@@ -14,6 +14,8 @@ interface FeatureEntry {
      */
     fun register(builder: NavGraphBuilder, navController: NavHostController, navScope: NavigationScope)
 
+    fun getRoute(): AppRoute
+
 
     /**
      * Try to decode this back stack entry into this feature's typed route.

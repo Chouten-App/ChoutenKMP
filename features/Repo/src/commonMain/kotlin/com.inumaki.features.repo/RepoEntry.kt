@@ -1,4 +1,4 @@
-package com.inumaki.features.discover
+package com.inumaki.features.repo
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -7,6 +7,7 @@ import androidx.navigation.toRoute
 import com.inumaki.core.ui.model.AppRoute
 import com.inumaki.core.ui.model.RepoRoute
 import com.inumaki.core.ui.model.FeatureEntry
+import com.inumaki.core.ui.model.HomeRoute
 import com.inumaki.core.ui.model.NavigationScope
 import com.inumaki.core.ui.model.TopBarAction
 import com.inumaki.core.ui.model.TopBarConfig
@@ -21,6 +22,7 @@ class RepoEntry: FeatureEntry, UiConfigProvider {
     ) {
         builder.composable<RepoRoute> { RepoView() }
     }
+    override fun getRoute(): AppRoute = RepoRoute
 
     override fun tryCreateRoute(entry: androidx.navigation.NavBackStackEntry): AppRoute? {
         val routeName = entry.destination.route ?: return null
