@@ -34,12 +34,9 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.components.resources)
 
-            implementation("io.coil-kt.coil3:coil-compose:3.3.0")
-            implementation("io.coil-kt.coil3:coil-svg:3.0.4")
-            implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
 
-            implementation(project(":core:UI"))
+            api(project(":core:UI"))
         }
 
         androidMain.dependencies {
