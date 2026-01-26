@@ -6,7 +6,7 @@ import platform.CoreMotion.CMMotionManager
 import platform.Foundation.NSOperationQueue
 import kotlin.math.PI
 
-actual class HeadingProvider {
+actual class GyroProvider: HeadingSource {
 
     private val motionManager = CMMotionManager()
     private val _heading = MutableStateFlow(0f)
