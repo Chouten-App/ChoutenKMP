@@ -10,9 +10,9 @@ actual class GyroProvider: HeadingSource {
 
     private val motionManager = CMMotionManager()
     private val _heading = MutableStateFlow(0f)
-    actual val heading: StateFlow<Float> = _heading
+    override val heading: StateFlow<Float> = _heading
 
-    actual fun start() {
+    override fun start() {
         if (!motionManager.deviceMotionAvailable) return
 
         motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
@@ -28,7 +28,7 @@ actual class GyroProvider: HeadingSource {
         }
     }
 
-    actual fun stop() {
+    override fun stop() {
         motionManager.stopDeviceMotionUpdates()
     }
 }
