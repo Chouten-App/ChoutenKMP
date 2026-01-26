@@ -3,8 +3,11 @@ package com.inumaki.core.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,10 +24,11 @@ import com.inumaki.core.ui.theme.AppTheme
 
 
 @Composable
-fun AppTopBar(topBarConfig: TopBarConfig?, angle: Float) {
+fun AppTopBar(topBarConfig: TopBarConfig?, angle: Float, modifier: Modifier = Modifier) {
     topBarConfig?.let { config ->
+        val statusInsets = WindowInsets.statusBars.asPaddingValues()
         Row(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .background(
                     Brush.linearGradient(
@@ -36,7 +40,7 @@ fun AppTopBar(topBarConfig: TopBarConfig?, angle: Float) {
                 )
                 .padding(
                     start = AppTheme.layout.screenEdgePadding.calculateLeftPadding(LayoutDirection.Ltr),
-                    top = AppTheme.layout.screenEdgePadding.calculateTopPadding(),
+                    top = AppTheme.layout.screenEdgePadding.calculateTopPadding() + statusInsets.calculateTopPadding(),
                     end = AppTheme.layout.screenEdgePadding.calculateRightPadding(LayoutDirection.Ltr)
                 ),
             verticalAlignment = Alignment.CenterVertically,

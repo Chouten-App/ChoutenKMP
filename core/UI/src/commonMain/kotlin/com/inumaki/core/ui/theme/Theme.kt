@@ -167,7 +167,7 @@ private fun compactLayout(): AppLayout {
 private fun phoneLayout(): AppLayout {
     return AppLayout(
         contentPadding = PaddingValues(horizontal = 24.dp),
-        screenEdgePadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 38.dp, top = 44.dp),
+        screenEdgePadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 38.dp, top = 20.dp),
         posterSize = DpSize(90.dp, 128.dp),
         iconSize = DpSize(44.dp, 44.dp),
         forceHideLabels = false,
