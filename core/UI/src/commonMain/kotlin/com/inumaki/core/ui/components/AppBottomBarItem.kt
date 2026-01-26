@@ -97,7 +97,7 @@ fun AppBottomBarItem(
         AsyncImage(
             Res.getUri(icon),
             contentDescription = title,
-            colorFilter = ColorFilter.tint(Color(0xffd3d3d3), BlendMode.SrcIn),
+            colorFilter = ColorFilter.tint(AppTheme.colors.fg, BlendMode.SrcIn),
             modifier = Modifier
                 .offset(y = if (AppTheme.layout.forceHideLabels) 8.dp else iconOffsetY)
                 .width(24.dp)

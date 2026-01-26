@@ -2,4 +2,7 @@ package com.inumaki.chouten
 
 import androidx.compose.ui.window.ComposeUIViewController
 
-fun MainViewController() = ComposeUIViewController { App(GyroProvider()) }
+fun MainViewController() = ComposeUIViewController {
+    val headingProvider = remember { GyroProvider() }
+    App(headingProvider)
+}
