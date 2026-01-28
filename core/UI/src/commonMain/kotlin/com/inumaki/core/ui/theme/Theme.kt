@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.inumaki.core.ui.components.SharedElementController
+import com.inumaki.core.ui.components.SharedElementOverlay
 
 // Define color scheme
 data class AppColors(
@@ -194,6 +196,7 @@ val LocalChoutenColors = staticCompositionLocalOf { LightAppColors }
 val LocalChoutenTypography = staticCompositionLocalOf { DefaultTypography }
 val LocalChoutenShapes = staticCompositionLocalOf { DefaultShapes }
 val LocalChoutenLayout = staticCompositionLocalOf { compactLayout() }
+val LocalSharedController = staticCompositionLocalOf { SharedElementController() }
 
 // ChoutenTheme provider function
 @Composable
@@ -201,6 +204,7 @@ fun AppTheme(
     colors: AppColors = if (isSystemInDarkTheme()) DarkAppColors else LightAppColors,
     typography: AppTypography = DefaultTypography,
     shapes: AppShapes = DefaultShapes,
+    controller: SharedElementController = SharedElementController(),
     content: @Composable () -> Unit
 ) {
     BoxWithConstraints {
@@ -210,7 +214,8 @@ fun AppTheme(
             LocalChoutenColors provides colors,
             LocalChoutenTypography provides typography,
             LocalChoutenShapes provides shapes,
-            LocalChoutenLayout provides layout
+            LocalChoutenLayout provides layout,
+            LocalSharedController provides controller
         ) {
             content()
         }
@@ -229,4 +234,8 @@ object AppTheme {
 
     val layout: AppLayout
         @Composable get() = LocalChoutenLayout.current
+
+
+    val controller: SharedElementController
+        @Composable get() = LocalSharedController.current
 }

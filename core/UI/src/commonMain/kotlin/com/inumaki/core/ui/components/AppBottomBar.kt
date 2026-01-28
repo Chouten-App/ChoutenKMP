@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -73,6 +74,7 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
     var isDragging by remember { mutableStateOf(false) }
     var showProfile by remember { mutableStateOf(false) }
     val barHeight = AppTheme.layout.bottomBarItemSize.height
+    val controller = AppTheme.controller
     val circleSize = 42.dp
 
     val transition = updateTransition(
@@ -195,15 +197,18 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
             horizontalArrangement = Arrangement.Start
         ) {
             if (circleWidth > 0.5.dp ) {
-                AppImageButton(
-                    "https://i.pinimg.com/1200x/7b/1d/dc/7b1ddcab5e7fccfb8a00ca680f4a24c3.jpg",
-                    angle,
-                    circleWidth,
-                    circleSize / 2,
-                    onClick = {
-                        navController.navigate(SettingsRoute)
-                    }
-                )
+                SharedElement("settings_morph", true) {
+                    AppImageButton(
+                        "https://i.pinimg.com/1200x/7b/1d/dc/7b1ddcab5e7fccfb8a00ca680f4a24c3.jpg",
+                        angle,
+                        circleWidth,
+                        circleSize / 2,
+                        onClick = {
+                            controller.startTransition("settings_morph")
+                            navController.navigate(SettingsRoute)
+                        }
+                    )
+                }
             }
             AnimatedVisibility(
                 visible = !searching,

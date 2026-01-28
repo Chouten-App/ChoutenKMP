@@ -4,5 +4,7 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSMotionUsageDescription</key>
+    <string>This app uses device motion to determine heading for navigation.</string>
 </dict>
 </plist>

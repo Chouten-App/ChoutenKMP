@@ -5,5 +5,5 @@ import androidx.compose.runtime.remember
 
 fun MainViewController() = ComposeUIViewController {
     val headingProvider = remember { GyroProvider() }
-    App(headingProvider)
+    App(headingProvider, createDataStore())
 }

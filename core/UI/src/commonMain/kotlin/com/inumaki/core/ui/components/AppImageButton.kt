@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import coil3.compose.AsyncImage
 import com.inumaki.core.ui.model.HomeRoute
 import com.inumaki.core.ui.modifiers.shiningBorder
@@ -23,9 +24,9 @@ import com.inumaki.core.ui.theme.AppTheme
 
 
 @Composable
-fun AppImageButton(imageUrl: String, angle: Float, width: Dp, radius: Dp, onClick: () -> Unit) {
+fun AppImageButton(imageUrl: String, angle: Float, width: Dp, radius: Dp, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .width(width)
             .aspectRatio(1f)
             .shiningBorder(angle, radius)

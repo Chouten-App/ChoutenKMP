@@ -28,7 +28,7 @@ fun AppButton(iconPath: String, angle: Float, modifier: Modifier = Modifier, bac
     Box(
         modifier = modifier
             .size(AppTheme.layout.iconSize)
-            .shiningBorder(angle, AppTheme.layout.iconSize.width / 2)
+            .shiningBorder(angle, AppTheme.layout.iconSize.width / 2, background)
             .clip(RoundedCornerShape(50))
             .background(background)
             .clickable {

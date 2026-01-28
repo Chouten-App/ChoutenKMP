@@ -40,6 +40,9 @@ kotlin {
             api("io.coil-kt.coil3:coil-svg:3.0.4")
             api("io.coil-kt.coil3:coil-network-ktor3:3.3.0")
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
+            api("androidx.datastore:datastore:1.2.0")
+            api("androidx.datastore:datastore-preferences:1.2.0")
+            api(project(":backdrop"))
         }
 
         androidMain.dependencies {

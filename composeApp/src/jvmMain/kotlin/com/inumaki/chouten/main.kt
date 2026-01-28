@@ -9,6 +9,7 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import com.inumaki.core.ui.createDataStore
 
 fun main() = application {
     System.setProperty("skiko.render.backend", "wayland")
@@ -23,6 +24,6 @@ fun main() = application {
         ),
         title = "Chouten",
     ) {
-        App(headingProvider)
+        App(headingProvider, createDataStore())
     }
 }

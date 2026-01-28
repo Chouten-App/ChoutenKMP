@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.inumaki.core.ui.createDataStore
 
 class MainActivity : ComponentActivity() {
     private lateinit var headingProvider: GyroProvider
@@ -17,7 +18,7 @@ class MainActivity : ComponentActivity() {
         headingProvider = GyroProvider(this)
 
         setContent {
-            App(headingProvider)
+            App(headingProvider, createDataStore(applicationContext))
         }
     }
 
