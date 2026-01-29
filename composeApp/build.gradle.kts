@@ -24,13 +24,31 @@ kotlin {
 
 
     if (isMac) {
-        listOf(
-            iosArm64(),
-            iosSimulatorArm64()
-        ).forEach { iosTarget ->
-            iosTarget.binaries.framework {
+        val relayLibPath = rootProject.file("runners/Relay/build")
+
+        iosArm64 {
+            binaries.framework {
                 baseName = "ComposeApp"
                 isStatic = true
+                freeCompilerArgs += listOf(
+                    "-linker-option", "-L${relayLibPath.resolve("ios-arm64").absolutePath}",
+                    "-linker-option", "-lrelay",
+                    "-linker-option", "-lwasm3",
+                    "-linker-option", "-lc++"
+                )
+            }
+        }
+
+        iosSimulatorArm64 {
+            binaries.framework {
+                baseName = "ComposeApp"
+                isStatic = true
+                freeCompilerArgs += listOf(
+                    "-linker-option", "-L${relayLibPath.resolve("ios-simulator-arm64").absolutePath}",
+                    "-linker-option", "-lrelay",
+                    "-linker-option", "-lwasm3",
+                    "-linker-option", "-lc++"
+                )
             }
         }
     }
