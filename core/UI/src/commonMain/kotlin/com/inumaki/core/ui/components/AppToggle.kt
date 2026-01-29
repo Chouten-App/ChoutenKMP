@@ -56,7 +56,6 @@ import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import kotlinx.coroutines.flow.collectLatest
-import sun.swing.SwingUtilities2.drawRect
 
 @Composable
 fun AppToggle(value: Boolean, onChange: (Boolean) -> Unit, backdrop: Backdrop, isLiquid: Boolean = false) {

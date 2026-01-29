@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+
 package com.inumaki.core.ui
 
 import androidx.datastore.core.DataStore

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlin.time.TimeSource
 
 class DampedDragAnimation(
     private val animationScope: CoroutineScope,
@@ -52,6 +53,8 @@ class DampedDragAnimation(
     private val mutatorMutex = MutatorMutex()
 
     private val velocityTracker = VelocityTracker()
+    private val timeSource = TimeSource.Monotonic
+    private val startMark = timeSource.markNow()
 
     val value: Float get() = valueAnimation.value
     val progress: Float get() = (value - valueRange.start) / (valueRange.endInclusive - valueRange.start)
@@ -127,7 +130,7 @@ class DampedDragAnimation(
 
     private fun updateVelocity() {
         velocityTracker.addPosition(
-            System.currentTimeMillis(),
+            startMark.elapsedNow().inWholeMilliseconds,
             Offset(value, 0f)
         )
         val targetVelocity = velocityTracker.calculateVelocity().x / (valueRange.endInclusive - valueRange.start)
