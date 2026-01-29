@@ -1,0 +1,34 @@
+cmake_minimum_required(VERSION 3.18)
+project(relay_ios C CXX)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+
+# Collect Wasm3 source files
+file(GLOB WASM3_SRC "${CMAKE_CURRENT_SOURCE_DIR}/wasm3/*.c")
+
+# Build relay as a static library
+add_library(relay STATIC
+    ${WASM3_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine/relay_native.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/platform/ios/ios_bridge.mm
+)
+
+target_include_directories(relay PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine
+    ${CMAKE_CURRENT_SOURCE_DIR}/wasm3
+)
+
+# Compiler flags
+target_compile_options(relay PRIVATE
+    -fPIC
+    -fno-exceptions
+    -Wno-extern-c-compat
+)
+
+# For Objective-C++ files
+set_source_files_properties(
+    ${CMAKE_CURRENT_SOURCE_DIR}/platform/ios/ios_bridge.mm
+    PROPERTIES COMPILE_FLAGS "-fobjc-arc"
+)
