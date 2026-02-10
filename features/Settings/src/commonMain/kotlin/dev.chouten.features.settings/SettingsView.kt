@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,13 +21,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,12 +46,16 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.inumaki.core.ui.components.AppButton
+import com.inumaki.core.ui.components.AppTintedButton
 import com.inumaki.core.ui.components.AppToggle
 import com.inumaki.core.ui.components.LiquidToggle
 import com.inumaki.core.ui.model.AppConfig
@@ -63,6 +74,12 @@ import com.kyant.backdrop.effects.vibrancy
 fun SettingsView(viewModel: SettingsViewModel, appConfig: AppConfig, modifier: Modifier = Modifier) {
     val useBlur by viewModel.useBlur.collectAsState()
     val useLiquidGlass by viewModel.useLiquidGlass.collectAsState()
+    val cliIP by viewModel.cliIP.collectAsState()
+
+    var cliIPField by remember {
+        mutableStateOf(TextFieldValue(cliIP))
+    }
+
     val controller = AppTheme.controller
 
     var selected by rememberSaveable { mutableStateOf(false) }
@@ -76,15 +93,23 @@ fun SettingsView(viewModel: SettingsViewModel, appConfig: AppConfig, modifier: M
         drawContent()
     }
 
+    LaunchedEffect(cliIP) {
+        if (cliIP != cliIPField.text) {
+            cliIPField = cliIPField.copy(text = cliIP)
+
+        }
+    }
+
     Box(
         modifier = modifier // <-- anchor to bottom
-            .shiningBorder(0f, 40.dp)
+            .shiningBorder(0f, 38.dp)
             .background(AppTheme.colors.container)
     ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 90.dp)
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 90.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Sections
             item {
@@ -93,9 +118,7 @@ fun SettingsView(viewModel: SettingsViewModel, appConfig: AppConfig, modifier: M
                     style = AppTheme.typography.caption1,
                     modifier = Modifier.padding(start = 20.dp, bottom = 2.dp)
                 )
-                Box(
-
-                ) {
+                Box {
                     Box(
                         modifier = Modifier
                             .matchParentSize()
@@ -146,6 +169,67 @@ fun SettingsView(viewModel: SettingsViewModel, appConfig: AppConfig, modifier: M
                                 // viewModel.setUseLiquidGlass(newValue)
                             }, backdrop, isLiquid = useLiquidGlass ?: false)
                         }
+                    }
+                }
+            }
+
+            item {
+                Text(
+                    "Debug",
+                    style = AppTheme.typography.caption1,
+                    modifier = Modifier.padding(start = 20.dp, bottom = 2.dp)
+                )
+                Box {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .shiningBorder(0f, 20.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(AppTheme.colors.overlay)
+                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "CLI",
+                                style = AppTheme.typography.subheadline,
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            BasicTextField(
+                                cliIPField,
+                                onValueChange = { newValue ->
+                                    cliIPField = newValue
+                                },
+                                textStyle = AppTheme.typography.subheadline.copy(color = AppTheme.colors.fg),
+                                singleLine = true,
+                                cursorBrush = SolidColor(AppTheme.colors.accent),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(AppTheme.colors.border)
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+
+                        Text(
+                            "Connect",
+                            color = AppTheme.colors.accent,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                                .clickable {
+                                    viewModel.setChoutenCLI(cliIPField.text)
+                                }
+                        )
                     }
                 }
             }

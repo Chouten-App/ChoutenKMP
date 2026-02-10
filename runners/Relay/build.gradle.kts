@@ -58,20 +58,24 @@ kotlin {
     }
 }
 
-tasks.register<Exec>("buildRelayDesktop") {
-    workingDir = file(".")
-    commandLine = listOf(
+tasks.register<Exec>("configureRelayDesktop") {
+    workingDir = file("src/main")
+    commandLine(
         "cmake",
         "-Bbuild/desktop",
-        "-H.",
+        "-S.",
         "-DCMAKE_BUILD_TYPE=Debug"
     )
-    doLast {
-        exec {
-            workingDir = file("build/desktop")
-            commandLine = listOf("cmake", "--build", ".")
-        }
-    }
+}
+
+tasks.register<Exec>("compileRelayDesktop") {
+    dependsOn("configureRelayDesktop")
+    workingDir = file("src/main/build/desktop")
+    commandLine("cmake", "--build", ".")
+}
+
+tasks.register("buildRelayDesktop") {
+    dependsOn("compileRelayDesktop")
 }
 
 android {

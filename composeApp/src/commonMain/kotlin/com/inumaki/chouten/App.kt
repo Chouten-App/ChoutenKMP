@@ -51,6 +51,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import chouten.composeapp.generated.resources.Res
 import com.inumaki.chouten.common.getFeatures
 import com.inumaki.core.ui.AppScaffold
 import com.inumaki.core.ui.components.SharedElement
@@ -71,10 +72,15 @@ import com.inumaki.features.discover.DiscoverView
 import com.inumaki.features.discover.DiscoverViewModel
 import com.inumaki.features.home.HomeView
 import com.inumaki.features.repo.RepoView
+import dev.chouten.core.repository.startDevClient
 import dev.chouten.features.settings.SettingsView
 import dev.chouten.features.settings.SettingsViewModel
 import dev.chouten.runners.relay.NativeBridge
+import dev.chouten.runners.relay.RelayLogger
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.roundToInt
 
 fun NavBackStackEntry.toAppRoute(featureEntries: List<FeatureEntry>): AppRoute? {
@@ -84,23 +90,19 @@ fun NavBackStackEntry.toAppRoute(featureEntries: List<FeatureEntry>): AppRoute? 
         .firstOrNull()
 }
 
+@OptIn(ExperimentalResourceApi::class)
+suspend fun loadWasm(): ByteArray {
+    return Res.readBytes("files/add.wasm")
+}
+
 @Suppress("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun App(provider: HeadingSource, dataStore: DataStore<Preferences>) {
     val navController = rememberNavController()
     val (featureEntries, uiConfigProviders) = getFeatures()
-    val backStackEntry by navController.currentBackStackEntryAsState()
 
     val backStackEntries by navController.currentBackStack.collectAsState()
-
-
-    val currentRoute: AppRoute? = backStackEntry?.let { entry ->
-        featureEntries
-            .asSequence()
-            .mapNotNull { feature -> feature.tryCreateRoute(entry) }
-            .firstOrNull()
-    }
 
     val fullscreenRoute = backStackEntries
         .mapNotNull { entry -> entry.toAppRoute(featureEntries) }
@@ -125,14 +127,34 @@ fun App(provider: HeadingSource, dataStore: DataStore<Preferences>) {
         if (showSheet) 0.6f else 0f
     }
 
+    fun onCliChange(newCli: String) {
+        startDevClient(newCli) { wasm ->
+            println("📦 Binary frame received: ${wasm.size} bytes")
+            NativeBridge.load(wasm)
+            val result = NativeBridge.callMethod("discover_wrapper")
+            println("Result -> $result")
+        }
+    }
+
     val navScope = remember { NavigationScope() }
     val discoverVm = navScope.viewModelStore.get("discover") { DiscoverViewModel() }
-    val settingsVm = navScope.viewModelStore.get("settings") { SettingsViewModel(dataStore) }
+    val settingsVm = navScope.viewModelStore.get("settings") { SettingsViewModel(dataStore, { onCliChange(it) } ) }
 
     LaunchedEffect(provider.heading) {
         provider.heading.collect { newValue ->
             GlobalState.setAngle(newValue)
         }
+    }
+
+    LaunchedEffect(true) {
+        val cliIP = dataStore.data
+            .map { prefs -> prefs[settingsVm.CHOUTEN_CLI] ?: "" }
+            .first()
+        if (cliIP.isNotEmpty()) {
+            onCliChange(cliIP)
+        }
+
+        NativeBridge.initLogger(RelayLogger)
     }
 
     val appConfig = AppConfig(
@@ -143,147 +165,86 @@ fun App(provider: HeadingSource, dataStore: DataStore<Preferences>) {
         uiConfigProviders
     )
 
+    val showChangelog = true
+    val showSplash = false
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
     ) {
         AppTheme {
-            AppScaffold(
-                provider.heading,
-                appConfig
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    NavHost(
-                        navController,
-                        DiscoverRoute,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        composable<DiscoverRoute> { }
-                        composable<HomeRoute> { }
-                        composable<RepoRoute> { }
-                        composable<SettingsRoute> { }
-                    }
-
-                    fullscreenRoute?.let { route ->
-                        when (route) {
-                            is DiscoverRoute -> DiscoverView(discoverVm)
-                            is HomeRoute -> HomeView()
-                            is RepoRoute -> RepoView()
-                            else -> {}
-                        }
-                    }
-
-
-                }
-            }
-
-            if (visible) {
-                Box(
-                    modifier = Modifier
-                        .alpha(backgroundAlpha)
-                        .fillMaxSize()
-                        .background(Color.Black)
-                        .clickable {
-                            navController.popBackStack()
-                        }
-                )
-            }
-
-
-
-            BoxWithConstraints(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                CompositionLocalProvider(
-                    LocalContentColor provides AppTheme.colors.fg
+            if (!showSplash) {
+                AppScaffold(
+                    provider.heading,
+                    appConfig
                 ) {
-                    topRoute?.let { route ->
-                        when (route) {
-                            is SettingsRoute -> {
-                                SharedElement("settings_morph", offset = Offset(x = 0f, y = maxHeight.value * 0.3f)) {
-                                    SettingsView(
-                                        settingsVm,
-                                        appConfig,
-                                        modifier = Modifier
-                                            .offset(y = maxHeight * 0.1f)
-                                            .fillMaxWidth()
-                                            .fillMaxHeight(0.9f)
-                                    )
-                                }
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        NavHost(
+                            navController,
+                            DiscoverRoute,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            featureEntries.forEach { it.register(this, navController, navScope) }
+                        }
+
+                        fullscreenRoute?.let { route ->
+                            when (route) {
+                                is DiscoverRoute -> DiscoverView(discoverVm)
+                                is HomeRoute -> HomeView()
+                                is RepoRoute -> RepoView()
+                                else -> {}
                             }
-
-                            else -> {}
                         }
                     }
-
-                    SharedElementOverlay()
                 }
-            }
 
-            /*
-            BoxWithConstraints(Modifier.fillMaxSize()) {
-                val width by animateDpAsState(
-                    targetValue = if (visible) maxWidth else 44.dp,
-                    animationSpec = spring(
-                        dampingRatio = 0.85f,
-                        stiffness = Spring.StiffnessMediumLow
-                    ),
-                    label = "sheetOffset"
-                )
-                val height by animateDpAsState(
-                    targetValue = if (visible) (maxHeight.value * 0.9).dp else 44.dp,
-                    animationSpec = spring(
-                        dampingRatio = 0.85f,
-                        stiffness = Spring.StiffnessMediumLow
-                    ),
-                    label = "sheetOffset"
-                )
-                val offsetX by animateDpAsState(
-                    targetValue = if (visible) 0.dp else 24.dp,
-                    animationSpec = spring(
-                        dampingRatio = 0.85f,
-                        stiffness = Spring.StiffnessMediumLow
-                    ),
-                    label = "sheetOffset"
-                )
-                val offsetY by animateDpAsState(
-                    targetValue = if (visible) 0.dp else -46.dp,
-                    animationSpec = spring(
-                        dampingRatio = 0.85f,
-                        stiffness = Spring.StiffnessMediumLow
-                    ),
-                    label = "sheetOffset"
-                )
-                val cornerRadius by animateDpAsState(
-                    targetValue = if (visible) 40.dp else 22.dp,
-                    animationSpec = spring(
-                        dampingRatio = 0.85f,
-                        stiffness = Spring.StiffnessMediumLow
-                    ),
-                    label = "sheetOffset"
-                )
-
-                CompositionLocalProvider(
-                    LocalContentColor provides AppTheme.colors.fg
-                ) {
+                if (visible) {
                     Box(
                         modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .width(width)
-                            .height(height)
-                            .offset(x = offsetX, y = offsetY)
-                            .clip(
-                                RoundedCornerShape(cornerRadius)
-                            )
-                            .background(AppTheme.colors.container)
+                            .alpha(backgroundAlpha)
+                            .fillMaxSize()
+                            .background(Color.Black)
+                            .clickable {
+                                navController.popBackStack()
+                            }
+                    )
+                }
+
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    CompositionLocalProvider(
+                        LocalContentColor provides AppTheme.colors.fg
                     ) {
-                        SettingsView(settingsVm, appConfig, expanded = visible)
+                        topRoute?.let { route ->
+                            when (route) {
+                                is SettingsRoute -> {
+                                    SharedElement(
+                                        "settings_morph",
+                                        offset = Offset(x = 0f, y = maxHeight.value * 0.3f)
+                                    ) {
+                                        SettingsView(
+                                            settingsVm,
+                                            appConfig,
+                                            modifier = Modifier
+                                                .offset(y = maxHeight * 0.1f)
+                                                .fillMaxWidth()
+                                                .fillMaxHeight(0.9f)
+                                        )
+                                    }
+                                }
+
+                                else -> {}
+                            }
+                        }
+
+                        SharedElementOverlay()
                     }
                 }
+            } else {
+                SplashScreen()
             }
-
-             */
         }
     }
 }

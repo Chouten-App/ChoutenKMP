@@ -27,7 +27,8 @@ data class AppColors(
     val overlay: Color,
     val border: Color,
     val fg: Color,
-    val accent: Color
+    val accent: Color,
+    val accentBorder: Color
 )
 
 val LightAppColors = AppColors(
@@ -36,7 +37,8 @@ val LightAppColors = AppColors(
     overlay = Color(0xFFEBEBEB),
     border = Color(0xFFE0E0E0),
     fg = Color(0xFF757575),
-    accent = Color(0xFF6458ED)
+    accent = Color(0xFF6458ED),
+    accentBorder = Color(0xFF9291FF)
 )
 
 val DarkAppColors = AppColors(
@@ -45,7 +47,8 @@ val DarkAppColors = AppColors(
     overlay = Color(0xFF272727),
     border = Color(0xFF3B3B3B),
     fg = Color(0xFFD4D4D4),
-    accent = Color(0xFF5E5CE6)
+    accent = Color(0xFF5E5CE6),
+    accentBorder = Color(0xFF9291FF)
 )
 
 // Define typography
@@ -169,7 +172,7 @@ private fun compactLayout(): AppLayout {
 private fun phoneLayout(): AppLayout {
     return AppLayout(
         contentPadding = PaddingValues(horizontal = 24.dp),
-        screenEdgePadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 38.dp, top = 20.dp),
+        screenEdgePadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp, top = 20.dp),
         posterSize = DpSize(90.dp, 128.dp),
         iconSize = DpSize(44.dp, 44.dp),
         forceHideLabels = false,

@@ -1,8 +1,10 @@
 package com.inumaki.features.discover.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.inumaki.core.ui.components.AppButton
+import com.inumaki.core.ui.components.AppTintedButton
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.model.PosterData
 import com.inumaki.core.ui.theme.AppTheme
@@ -34,11 +37,11 @@ import com.inumaki.core.ui.theme.AppTheme
 fun CarouselCard(data: PosterData, angle: Float) {
     Box(
         modifier = Modifier
-            .padding(40.dp)
+            .padding(24.dp)
             .widthIn(max = 460.dp)
             .fillMaxWidth()
-            .shiningBorder(angle, 22.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .shiningBorder(angle, 34.dp)
+            .clip(RoundedCornerShape(34.dp))
             .background(AppTheme.colors.container),
         contentAlignment = Alignment.TopEnd
     ) {
@@ -67,22 +70,25 @@ fun CarouselCard(data: PosterData, angle: Float) {
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(14.dp)
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                data.title.secondary ?: "",
-                style = AppTheme.typography.callout,
-                maxLines = 2,
-                modifier = Modifier.alpha(0.7f)
-            )
+            Column {
+                Text(
+                    data.title.secondary ?: "",
+                    style = AppTheme.typography.caption2,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    modifier = Modifier.alpha(0.7f)
+                )
 
-            Text(
-                data.title.primary,
-                style = AppTheme.typography.title3,
-                fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                modifier = Modifier.padding(bottom = 6.dp)
-            )
+                Text(
+                    data.title.primary,
+                    style = AppTheme.typography.title2,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                )
+            }
 
             Text(
                 data.description ?: "",
@@ -92,8 +98,11 @@ fun CarouselCard(data: PosterData, angle: Float) {
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.alpha(0.7f)
             )
-        }
+            Row {
+                AppButton("drawable/plus-solid-full.svg", angle, modifier = Modifier.padding(end = 12.dp))
 
-        AppButton("drawable/plus-solid-full.svg", angle, modifier = Modifier.padding(12.dp))
+                AppTintedButton("Start Episode 1", modifier = Modifier.fillMaxWidth())
+            }
+        }
     }
 }

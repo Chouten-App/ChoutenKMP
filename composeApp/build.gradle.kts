@@ -48,7 +48,7 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
-            implementation(compose.components.resources)
+            implementation("org.jetbrains.compose.components:components-resources:1.10.0")
             implementation(compose.components.uiToolingPreview)
 
             implementation("io.coil-kt.coil3:coil-compose:3.3.0")
@@ -58,6 +58,7 @@ kotlin {
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
 
             implementation(project(":core:UI"))
+            implementation(project(":core:repository"))
             implementation(project(":features:Home"))
             implementation(project(":features:Discover"))
             implementation(project(":features:Repo"))

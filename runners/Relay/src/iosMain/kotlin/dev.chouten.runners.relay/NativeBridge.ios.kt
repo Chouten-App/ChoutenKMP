@@ -17,6 +17,10 @@ actual object NativeBridge {
         return relay_add(a, b)
     }
 
+    actual fun callMethod(name: String): String {
+        return relay_callMethod(name)
+    }
+
     actual fun initLogger(logger: Any) {
         val stableRef = StableRef.create(logger)
         relay_init_logger(stableRef.asCPointer())

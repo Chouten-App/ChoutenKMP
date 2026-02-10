@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,7 +14,7 @@ import com.inumaki.core.ui.components.AppTintedButton
 import com.inumaki.core.ui.theme.AppTheme
 
 @Composable
-fun SplashScreen() {
+fun ChangelogScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -23,6 +22,6 @@ fun SplashScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom
     ) {
-        Text("Splash")
+        AppTintedButton("Continue", modifier = Modifier.padding(34.dp, 34.dp).fillMaxWidth())
     }
 }

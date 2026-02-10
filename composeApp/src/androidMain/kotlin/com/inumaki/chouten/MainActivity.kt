@@ -18,12 +18,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        NativeBridge.initLogger(RelayLogger)
-        val wasmBytes = applicationContext.assets.open("add.wasm").readBytes()
-        NativeBridge.load(wasmBytes)
-        val result = NativeBridge.add(7, 5)
-        Log.d("RelayTest", "7 + 5 = $result")
-
         headingProvider = GyroProvider(this)
 
         setContent {

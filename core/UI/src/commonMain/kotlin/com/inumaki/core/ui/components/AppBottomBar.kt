@@ -17,6 +17,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -117,17 +119,7 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
         if (isDragging) 1.01f else 1f
     }
 
-    val circleWidth by transition.animateDp(
-        transitionSpec = {
-            spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            )
-        },
-        label = "CircleWidth"
-    ) { isSearching ->
-        if (isSearching) 0.dp else circleSize
-    }
+
 
     val indicatorAlpha by transition.animateFloat(
         transitionSpec = { spring(Spring.DampingRatioMediumBouncy) },
@@ -136,44 +128,7 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
         if (isSearching) 0f else 1f
     }
 
-
-    val itemWidth = AppTheme.layout.bottomBarItemSize.width
-
-    fun finalizeIndex() {
-        val rawIndex = (selectedIndex * itemWidth + dragOffset) / itemWidth
-        selectedIndex = rawIndex.roundToInt().coerceIn(0, 2)
-        dragOffset = 0.dp
-
-        when (selectedIndex) {
-            0 -> navController.navigate(HomeRoute)
-            1 -> navController.navigate(DiscoverRoute)
-            2 -> navController.navigate(RepoRoute)
-            else -> {}
-        }
-    }
-
-    val containerWidth by transition.animateDp(
-        transitionSpec = {
-            spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            )
-        },
-        label = "ContainerWidth"
-    ) { isSearching ->
-        if (isSearching) barHeight else itemWidth
-    }
-
-    val animatedOffset by animateDpAsState(
-        targetValue = itemWidth * selectedIndex + dragOffset,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "BottomBarIndicator"
-    )
-
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .background(
@@ -185,6 +140,52 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
                 )
             )
     ) {
+        val circleWidth by transition.animateDp(
+            transitionSpec = {
+                spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            },
+            label = "CircleWidth"
+        ) { isSearching ->
+            if (isSearching) 0.dp else AppTheme.layout.iconSize.width
+        }
+
+        val itemWidth = (maxWidth - 88.dp - 48.dp - 16.dp - 8.dp) / 3
+        fun finalizeIndex() {
+            val rawIndex = (selectedIndex * itemWidth + dragOffset) / itemWidth
+            selectedIndex = rawIndex.roundToInt().coerceIn(0, 2)
+            dragOffset = 0.dp
+
+            when (selectedIndex) {
+                0 -> navController.navigate(HomeRoute)
+                1 -> navController.navigate(DiscoverRoute)
+                2 -> navController.navigate(RepoRoute)
+                else -> {}
+            }
+        }
+
+        val containerWidth by transition.animateDp(
+            transitionSpec = {
+                spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            },
+            label = "ContainerWidth"
+        ) { isSearching ->
+            if (isSearching) barHeight else itemWidth
+        }
+
+        val animatedOffset by animateDpAsState(
+            targetValue = itemWidth * selectedIndex + dragOffset,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            ),
+            label = "BottomBarIndicator"
+        )
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -202,7 +203,7 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
                         "https://i.pinimg.com/1200x/7b/1d/dc/7b1ddcab5e7fccfb8a00ca680f4a24c3.jpg",
                         angle,
                         circleWidth,
-                        circleSize / 2,
+                        50.dp,
                         onClick = {
                             controller.startTransition("settings_morph")
                             navController.navigate(SettingsRoute)
@@ -219,7 +220,7 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
                     shrinkTowards = Alignment.Start
                 )
             ) {
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(8.dp))
             }
 
             Box(
@@ -305,7 +306,7 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
                             label = "ItemAlpha"
                         )
 
-                        val itemWidth by animateDpAsState(
+                        val itemWidthAnim by animateDpAsState(
                             targetValue = if (shouldBeVisible && searching) barHeight else if (shouldBeVisible) itemWidth else 0.dp,
                             animationSpec = spring(
                                 dampingRatio = Spring.DampingRatioNoBouncy,
@@ -320,7 +321,7 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
                             isSelected = selectedIndex == index,
                             showLabel = !searching,
                             modifier = Modifier
-                                .width(itemWidth)
+                                .width(itemWidthAnim)
                                 .alpha(itemAlpha)
                                 .clickable(
                                     enabled = shouldBeVisible, // important
@@ -342,13 +343,13 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
                 }
             }
 
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
             // Search button / field
             Row(
                 modifier = Modifier
-                    .height(44.dp)
-                    .shiningBorder(angle, 22.dp)
+                    .height(AppTheme.layout.iconSize.height)
+                    .shiningBorder(angle, 50.dp)
                     .clip(RoundedCornerShape(50))
                     .background(AppTheme.colors.container)
                     .animateContentSize(
@@ -372,7 +373,7 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
                     colorFilter = ColorFilter.tint(Color(0xffd3d3d3), BlendMode.SrcIn),
                     modifier = Modifier
                         .padding(12.dp)
-                        .width(20.dp)
+                        .width(AppTheme.layout.iconSize.width - 24.dp)
                         .aspectRatio(1f)
                         .alpha(if (searching) 1f else 0.7f)
                 )

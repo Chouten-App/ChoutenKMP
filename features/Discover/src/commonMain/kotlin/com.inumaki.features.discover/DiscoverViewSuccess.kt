@@ -29,7 +29,7 @@ fun DiscoverViewSuccess(items: List<DiscoverList>, angle: Float) {
         horizontalAlignment = Alignment.Start
     ) {
         LazyColumn(
-            contentPadding = PaddingValues(top = 60.dp, bottom = 100.dp)
+            contentPadding = PaddingValues(top = 92.dp, bottom = 100.dp)
         ) {
             item {
                 CarouselCard(items[0].list[0], angle)

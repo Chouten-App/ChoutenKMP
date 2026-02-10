@@ -38,7 +38,7 @@ class DiscoverViewModel : ViewModel() {
                 list = listOf(
                     PosterData(
                         title = Title(
-                            primary = "Sousou no Frieren 2nd Season",
+                            primary = "Frieren: Beyond \nJourney’s End Season 2",
                             secondary = "葬送のフリーレン 第2期"
                         ),
                         poster = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx182255-butzrqd4I0aC.jpg",

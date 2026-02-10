@@ -18,25 +18,27 @@ import com.inumaki.core.ui.theme.AppTheme
 fun Modifier.shiningBorder(
     angle: Float,
     radius: Dp,
-    backgroundColor: Color? = null
+    backgroundColor: Color? = null,
+    borderColor: Color? = null
 ): Modifier {
     val colors = AppTheme.colors
     val background = backgroundColor ?: colors.container
+    val border = borderColor ?: colors.border
     val sweepBrush = remember(colors) {
         Brush.sweepGradient(
             colors = listOf(
-                colors.border,
+                border,
                 background,
                 background,
                 background,
-                colors.border,
-                colors.border,
+                border,
+                border,
                 background,
                 background,
                 background,
                 background,
                 background,
-                colors.border
+                border
             )
         )
     }

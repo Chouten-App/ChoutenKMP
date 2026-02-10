@@ -13,7 +13,9 @@ object RelayLogger {
 }
 
 expect object NativeBridge {
+    fun request(url: String, method: Int): Int
     fun initLogger(logger: Any)
     fun load(bytes: ByteArray)
     fun add(a: Int, b: Int): Int
+    fun callMethod(name: String): String
 }

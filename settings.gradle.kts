@@ -35,6 +35,7 @@ plugins {
 
 include(":composeApp")
 include(":core:UI")
+include(":core:repository")
 include(":features:Home")
 include(":features:Discover")
 include(":features:Repo")
