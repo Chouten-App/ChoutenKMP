@@ -18,13 +18,39 @@ kotlin {
     jvm("desktop")
 
     if (isMac) {
-        listOf(
-            iosArm64(),
-            iosSimulatorArm64()
-        ).forEach { iosTarget ->
-            iosTarget.binaries.framework {
+        iosArm64 {
+            binaries.framework {
                 baseName = "Relay"
                 isStatic = true
+                linkerOpts("-L${project.file("build/ios-arm64").absolutePath}", "-lrelay", "-lwasm3")
+            }
+            compilations.getByName("main") {
+                cinterops {
+                    val relay by creating {
+                        defFile(project.file("src/nativeInterop/cinterop/relay.def"))
+                        packageName("relay")
+                        includeDirs(project.file("src/main/include"))
+                        extraOpts("-libraryPath", project.file("build/ios-arm64").absolutePath)
+                    }
+                }
+            }
+        }
+
+        iosSimulatorArm64 {
+            binaries.framework {
+                baseName = "Relay"
+                isStatic = true
+                linkerOpts("-L${project.file("build/ios-simulator-arm64").absolutePath}", "-lrelay", "-lwasm3")
+            }
+            compilations.getByName("main") {
+                cinterops {
+                    val relay by creating {
+                        defFile(project.file("src/nativeInterop/cinterop/relay.def"))
+                        packageName("relay")
+                        includeDirs(project.file("src/main/include"))
+                        extraOpts("-libraryPath", project.file("build/ios-simulator-arm64").absolutePath)
+                    }
+                }
             }
         }
     }
@@ -39,7 +65,6 @@ kotlin {
 
                 implementation("io.coil-kt.coil3:coil-compose:3.3.0")
                 implementation("io.coil-kt.coil3:coil-svg:3.0.4")
-                implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
                 implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
             }
         }
@@ -47,13 +72,27 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation("androidx.activity:activity-compose:1.9.0")
+                implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
             }
         }
 
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
+                implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
             }
+        }
+
+        if (isMac) {
+            val iosMain by creating {
+                dependsOn(commonMain)
+                dependencies {
+                    implementation("io.coil-kt.coil3:coil-network-ktor3:3.3.0")
+                    implementation("io.ktor:ktor-client-darwin:3.1.3")
+                }
+            }
+            val iosArm64Main by getting { dependsOn(iosMain) }
+            val iosSimulatorArm64Main by getting { dependsOn(iosMain) }
         }
     }
 }
