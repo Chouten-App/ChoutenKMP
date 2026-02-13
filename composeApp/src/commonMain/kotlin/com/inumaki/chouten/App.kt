@@ -58,6 +58,7 @@ import com.inumaki.core.ui.components.SharedElement
 import com.inumaki.core.ui.components.SharedElementOverlay
 import com.inumaki.core.ui.model.AppConfig
 import com.inumaki.core.ui.model.AppRoute
+import com.inumaki.core.ui.model.DevClient
 import com.inumaki.core.ui.model.DiscoverRoute
 import com.inumaki.core.ui.model.FeatureEntry
 import com.inumaki.core.ui.model.GlobalState
@@ -127,12 +128,19 @@ fun App(provider: HeadingSource, dataStore: DataStore<Preferences>) {
         if (showSheet) 0.6f else 0f
     }
 
+    var devClient: DevClient? = null
+
     fun onCliChange(newCli: String) {
-        startDevClient(newCli) { wasm ->
+        devClient = startDevClient(newCli) { wasm, client ->
             println("📦 Binary frame received: ${wasm.size} bytes")
             NativeBridge.load(wasm)
-            val result = NativeBridge.callMethod("discover_wrapper")
-            println("Result -> $result")
+            RelayLogger.devClient = client
+            try {
+                val result = NativeBridge.callMethod("discover_wrapper")
+                println("Result -> $result")
+            } catch (e: Exception) {
+                println("NativeBridge error: $e")
+            }
         }
     }
 

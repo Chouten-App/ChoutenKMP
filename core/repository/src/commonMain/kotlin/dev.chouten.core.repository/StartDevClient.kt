@@ -1,5 +1,6 @@
 package dev.chouten.core.repository
 
+import com.inumaki.core.ui.model.DevClient
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
@@ -10,13 +11,25 @@ import kotlinx.serialization.json.jsonPrimitive
 
 expect val httpClient: HttpClient
 
-fun startDevClient(ip: String, onWasmReceived: (ByteArray) -> Unit) {
+fun startDevClient(
+    ip: String,
+    onWasmReceived: (ByteArray, DevClient) -> Unit
+): DevClient {
     val client = httpClient
+    var session: WebSocketSession? = null
+
+    // Create the DevClient first
+    val devClient = object : DevClient {
+        override suspend fun sendLog(message: String) {
+            session?.send(Frame.Text(message))
+        }
+    }
 
     GlobalScope.launch {
         try {
             client.webSocket("ws://$ip:9001/dev") {
                 println("🔌 Connected to Chouten dev CLI")
+                session = this
 
                 for (frame in incoming) {
                     when (frame) {
@@ -28,8 +41,7 @@ fun startDevClient(ip: String, onWasmReceived: (ByteArray) -> Unit) {
 
                         is Frame.Binary -> {
                             val bytes = frame.readBytes()
-                            onWasmReceived(bytes)
-                            //println("📦 Binary frame received: ${bytes.size} bytes")
+                            onWasmReceived(bytes, devClient) // pass the DevClient here
                         }
 
                         else -> {}
@@ -40,4 +52,6 @@ fun startDevClient(ip: String, onWasmReceived: (ByteArray) -> Unit) {
             println("⚠️ WebSocket error: $e")
         }
     }
+
+    return devClient
 }

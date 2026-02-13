@@ -1,14 +1,33 @@
 package dev.chouten.runners.relay
 
+import com.inumaki.core.ui.model.DevClient
+import kotlinx.coroutines.launch
+
 
 object RelayLogger {
     var logs: List<String> = listOf()
 
-    // This will be called from native C++/WASM
+    // Optional DevClient; if null, fallback to println
+    var devClient: DevClient? = null
+
+    // Called from native C++ / WASM
     fun log(message: String) {
-        // You can use Log.d, println, or whatever you want
-        println("RelayWASM -> $message")
         logs += message
+
+        // Always print locally
+        println("RelayWASM -> $message")
+
+        // If a dev client is set, send asynchronously
+        devClient?.let { client ->
+            // Fire-and-forget coroutine
+            kotlinx.coroutines.GlobalScope.launch {
+                try {
+                    client.sendLog(message)
+                } catch (e: Exception) {
+                    println("⚠️ Failed to send log to DevClient: $e")
+                }
+            }
+        }
     }
 }
 

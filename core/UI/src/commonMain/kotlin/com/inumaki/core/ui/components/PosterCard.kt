@@ -71,7 +71,7 @@ fun PosterCard(data: PosterData, angle: Float) {
                     .size(AppTheme.layout.posterSize)
             )
             Text(
-                "̃~/~",
+                "~/~",
                 style = AppTheme.typography.caption2,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -79,7 +79,7 @@ fun PosterCard(data: PosterData, angle: Float) {
                     .shiningBorder(angle, 12.dp)
                     .clip(RoundedCornerShape(50))
                     .background(AppTheme.colors.container)
-                    .padding(horizontal = 8.dp, vertical = 0.dp)
+                    .padding(horizontal = 8.dp, vertical = 2.dp)
             )
         }
 

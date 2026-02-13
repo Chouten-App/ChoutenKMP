@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.inumaki.core.ui.components.AppButton
 import com.inumaki.core.ui.components.AppTintedButton
+import com.inumaki.core.ui.components.ConcentricShape
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.model.PosterData
 import com.inumaki.core.ui.theme.AppTheme
@@ -40,8 +41,8 @@ fun CarouselCard(data: PosterData, angle: Float) {
             .padding(24.dp)
             .widthIn(max = 460.dp)
             .fillMaxWidth()
-            .shiningBorder(angle, 34.dp)
-            .clip(RoundedCornerShape(34.dp))
+            //.shiningBorder(angle, 34.dp)
+            .clip(ConcentricShape(34.dp))
             .background(AppTheme.colors.container),
         contentAlignment = Alignment.TopEnd
     ) {

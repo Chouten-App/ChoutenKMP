@@ -43,6 +43,8 @@ kotlin {
             implementation("io.ktor:ktor-client-content-negotiation")
             implementation("io.ktor:ktor-client-websockets")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+            implementation(project(":core:UI"))
         }
 
         androidMain.dependencies {
