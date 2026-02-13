@@ -1,5 +1,6 @@
 package com.inumaki.features.discover
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,7 +26,8 @@ import com.inumaki.features.discover.model.DiscoverList
 fun DiscoverViewSuccess(items: List<DiscoverList>, angle: Float) {
     Column(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .background(AppTheme.colors.background),
         horizontalAlignment = Alignment.Start
     ) {
         LazyColumn(
