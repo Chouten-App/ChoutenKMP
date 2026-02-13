@@ -6,5 +6,7 @@
 	<true/>
 	<key>NSMotionUsageDescription</key>
     <string>This app uses device motion to determine heading for navigation.</string>
+    <key>NSAllowsLocalNetworking</key>
+    <true/>
 </dict>
 </plist>

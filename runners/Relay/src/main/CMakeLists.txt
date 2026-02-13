@@ -11,7 +11,7 @@ target_include_directories(wasm3 PUBLIC wasm3)
 # 3️⃣ Build your relay JNI library
 add_library(relay SHARED
     engine/relay_native.cpp
-    platform/android/jni_bridge.cpp
+    platform/jni/jni_bridge.cpp
 )
 
 # 4️⃣ Link Wasm3 + log library
