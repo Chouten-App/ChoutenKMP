@@ -20,6 +20,23 @@ private var modulePtr: COpaquePointer? = null
  */
 actual object NativeBridge {
 
+    //TODO
+    actual fun request(url: String, method: Int): Int {
+        TODO("Not yet implemented")
+    }
+
+    actual fun callMethod(name: String): String {
+        val ptr = modulePtr ?: run {
+            RelayLogger.log("RelayWASM -> callMethod: no module loaded")
+            return ""
+        }
+        val result = relay_callMethod(ptr, name)
+        return result?.toKString() ?: run {
+            RelayLogger.log("RelayWASM -> callMethod '$name' returned null (function lookup failed)")
+            ""
+        }
+    }
+
     /**
      * Load a WASM module from raw bytes.
      * Uses usePinned to prevent GC from moving the byte array while C is reading it.

@@ -1,5 +1,4 @@
 package = relay
 headers = relay_c_api.h
 headerFilter = relay_c_api.h
-staticLibraries = librelay.a libwasm3.a
-libraryPaths = build/ios-arm64 build/ios-simulator-arm64
+staticLibraries = librelay.a
