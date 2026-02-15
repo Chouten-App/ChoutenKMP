@@ -14,7 +14,7 @@ data class RepositoryDetails(
     val baseUrl: String,
     val modules: List<ModuleDetails>,
     val freshnessPolicy: FreshnessPolicy,
-    val lastFetched: Float
+    val lastFetched: Long
 )
 
 sealed class FreshnessPolicy {
@@ -32,7 +32,7 @@ data class ModuleDetails(
 
 object RepositoryManager {
     var repos: List<RepositoryDetails> = emptyList()
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     fun startPolling() {
         scope.launch {
@@ -52,7 +52,7 @@ object RepositoryManager {
     }
 
     fun refreshRepositories() {
-        val now = System.currentTimeMillis()
+        val now = currentTimeMillis()
 
         repos.forEach { repo ->
             when (val policy = repo.freshnessPolicy) {
