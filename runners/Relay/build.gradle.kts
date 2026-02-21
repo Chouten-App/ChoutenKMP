@@ -21,8 +21,8 @@ kotlin {
         iosArm64 {
             binaries.framework {
                 baseName = "Relay"
-                isStatic = true
-                linkerOpts("-L${project.file("build/ios-arm64").absolutePath}", "-lrelay", "-lwasm3")
+                isStatic = false
+                linkerOpts("-force_load", project.file("build/ios-arm64/librelay.a").absolutePath)
             }
             compilations.getByName("main") {
                 cinterops {
@@ -39,8 +39,8 @@ kotlin {
         iosSimulatorArm64 {
             binaries.framework {
                 baseName = "Relay"
-                isStatic = true
-                linkerOpts("-L${project.file("build/ios-simulator-arm64").absolutePath}", "-lrelay", "-lwasm3")
+                isStatic = false
+                linkerOpts("-force_load", project.file("build/ios-simulator-arm64/librelay.a").absolutePath)
             }
             compilations.getByName("main") {
                 cinterops {
