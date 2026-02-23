@@ -19,7 +19,7 @@ class HomeEntry: FeatureEntry, UiConfigProvider {
         navController: NavHostController,
         navScope: NavigationScope
     ) {
-        builder.composable<HomeRoute> { HomeView() }
+        builder.composable<HomeRoute> {  }
     }
 
     override fun getRoute(): AppRoute = HomeRoute

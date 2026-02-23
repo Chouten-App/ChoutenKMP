@@ -64,7 +64,6 @@ fun AppContainer(
                 // Primary navigation host
                 AppNavHost(appConfig = appConfig)
 
-                // Fullscreen overlays (e.g., Discover, Home, Repo)
                 navigationState.fullscreenRoute?.let { route ->
                     FullscreenOverlay(
                         route = route,

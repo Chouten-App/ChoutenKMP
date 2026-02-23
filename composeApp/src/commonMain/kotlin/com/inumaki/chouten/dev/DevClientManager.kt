@@ -5,7 +5,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.inumaki.core.ui.model.DevClient
 import dev.chouten.core.repository.startDevClient
-import dev.chouten.features.settings.SettingsViewModel
 import dev.chouten.runners.relay.NativeBridge
 import dev.chouten.runners.relay.RelayLogger
 import kotlinx.coroutines.flow.first

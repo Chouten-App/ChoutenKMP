@@ -21,7 +21,6 @@ import com.inumaki.core.ui.model.NavigationScope
 import com.inumaki.core.ui.theme.AppTheme
 import dev.chouten.runners.relay.NativeBridge
 import dev.chouten.runners.relay.RelayLogger
-import kotlinx.coroutines.flow.collect
 
 /**
  * Root composable that sets up the app configuration and theme.

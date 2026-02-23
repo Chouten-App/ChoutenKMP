@@ -20,7 +20,7 @@ class RepoEntry: FeatureEntry, UiConfigProvider {
         navController: NavHostController,
         navScope: NavigationScope
     ) {
-        builder.composable<RepoRoute> { RepoView() }
+        builder.composable<RepoRoute> {  }
     }
     override fun getRoute(): AppRoute = RepoRoute
 

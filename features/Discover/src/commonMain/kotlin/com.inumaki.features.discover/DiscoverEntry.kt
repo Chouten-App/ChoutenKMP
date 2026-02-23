@@ -20,8 +20,7 @@ class DiscoverEntry: FeatureEntry, UiConfigProvider {
         navController: NavHostController,
         navScope: NavigationScope,
     ) {
-        val discoverVm = navScope.viewModelStore.get("discover") { DiscoverViewModel() }
-        builder.composable<DiscoverRoute> { DiscoverView(discoverVm) }
+        builder.composable<DiscoverRoute> {  }
     }
     override fun getRoute(): AppRoute = DiscoverRoute
 
