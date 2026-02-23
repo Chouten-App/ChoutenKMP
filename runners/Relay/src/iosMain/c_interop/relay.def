@@ -1,3 +1,0 @@
-headers = relay_c_api.h
-headerFilter = relay_c_api.h
-compilerOpts = -I${projectDir}/src/main/include

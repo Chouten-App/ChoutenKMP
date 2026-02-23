@@ -31,9 +31,8 @@ kotlin {
                 baseName = "ComposeApp"
                 isStatic = true
                 freeCompilerArgs += listOf(
-                    "-linker-option", "-L${relayLibPath.resolve("ios-arm64").absolutePath}",
-                    "-linker-option", "-lrelay",
-                    "-linker-option", "-lwasm3",
+                    "-linker-option", "-force_load",
+                    "-linker-option", relayLibPath.resolve("ios-arm64/librelay.a").absolutePath,
                     "-linker-option", "-lc++"
                 )
             }
@@ -44,9 +43,8 @@ kotlin {
                 baseName = "ComposeApp"
                 isStatic = true
                 freeCompilerArgs += listOf(
-                    "-linker-option", "-L${relayLibPath.resolve("ios-simulator-arm64").absolutePath}",
-                    "-linker-option", "-lrelay",
-                    "-linker-option", "-lwasm3",
+                    "-linker-option", "-force_load",
+                    "-linker-option", relayLibPath.resolve("ios-simulator-arm64/librelay.a").absolutePath,
                     "-linker-option", "-lc++"
                 )
             }
