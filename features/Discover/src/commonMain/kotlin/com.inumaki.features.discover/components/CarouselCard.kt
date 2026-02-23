@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -17,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.BlendMode.Companion.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -25,10 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.inumaki.core.ui.components.AppButton
-import com.inumaki.core.ui.components.AppTintedButton
 import com.inumaki.core.ui.components.ConcentricShape
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.model.PosterData
@@ -71,7 +66,7 @@ fun CarouselCard(data: PosterData, angle: Float) {
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(12.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Column {
@@ -99,11 +94,18 @@ fun CarouselCard(data: PosterData, angle: Float) {
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.alpha(0.7f)
             )
-            Row {
-                AppButton("drawable/plus-solid-full.svg", angle, modifier = Modifier.padding(end = 12.dp))
+        }
 
-                AppTintedButton("Start Episode 1", modifier = Modifier.fillMaxWidth())
-            }
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+                .shiningBorder(angle, 50.dp)
+                .clip(RoundedCornerShape(50))
+                .background(AppTheme.colors.container)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+            Text("1/10")
         }
     }
 }
