@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -23,7 +25,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.inumaki.core.ui.components.AppImage
 import com.inumaki.core.ui.components.ConcentricShape
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.model.PosterData
@@ -54,11 +58,11 @@ fun CarouselCard(data: PosterData, angle: Float) {
             modifier = Modifier
                 .matchParentSize()
                 .background(
-                    Brush.linearGradient(
+                    Brush.verticalGradient(
                         listOf(
-                            Color(0x00FFFFFF and AppTheme.colors.container.toArgb()),
+                            AppTheme.colors.container.copy(0f),
                             AppTheme.colors.container
-                        )
+                        ),
                     )
                 )
         )
@@ -103,9 +107,13 @@ fun CarouselCard(data: PosterData, angle: Float) {
                 .shiningBorder(angle, 50.dp)
                 .clip(RoundedCornerShape(50))
                 .background(AppTheme.colors.container)
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text("1/10")
+            Text("1/10", fontSize = 12.sp)
+
+            AppImage("drawable/tv-solid-full.svg", modifier = Modifier.width(14.dp))
         }
     }
 }

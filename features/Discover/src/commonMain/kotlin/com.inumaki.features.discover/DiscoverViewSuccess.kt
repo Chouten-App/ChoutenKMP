@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -21,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.inumaki.core.ui.components.AppImage
 import com.inumaki.core.ui.components.PosterCard
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.theme.AppTheme
@@ -60,12 +62,16 @@ fun DiscoverViewSuccess(items: List<DiscoverList>, angle: Float) {
                     Row(
                         modifier = Modifier
                             .padding(end = 24.dp)
-                            .shiningBorder(angle, 50.dp, AppTheme.colors.overlay)
+                            .shiningBorder(angle, 50.dp)
                             .clip(RoundedCornerShape(50))
-                            .background(AppTheme.colors.overlay)
-                            .padding(horizontal = 8.dp, vertical = 6.dp)
+                            .background(AppTheme.colors.container)
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text("more", fontSize = 10.sp)
+                        Text("more", fontSize = 12.sp)
+
+                        AppImage("drawable/chevron-right-solid-full.svg", modifier = Modifier.width(14.dp))
                     }
                 }
                 LazyRow(

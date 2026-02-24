@@ -132,11 +132,9 @@ fun AppBottomBar(angle: Float, navController: NavHostController) {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                Brush.linearGradient(
-                    0.0f to Color(0x00FFFFFF and AppTheme.colors.background.toArgb()),
+                Brush.verticalGradient(
+                    0.0f to AppTheme.colors.background.copy(0f),
                     1.0f to AppTheme.colors.background,
-                    start = Offset(0f, 100f),
-                    end = Offset(0f, 260f)
                 )
             )
     ) {

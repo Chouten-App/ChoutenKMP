@@ -37,11 +37,9 @@ fun AppTopBar(topBarConfig: TopBarConfig?, angle: Float, modifier: Modifier = Mo
             modifier = modifier
                 .fillMaxWidth()
                 .background(
-                    Brush.linearGradient(
+                    Brush.verticalGradient(
                         0.0f to AppTheme.colors.background,
-                        1.0f to Color(0x00FFFFFF and AppTheme.colors.background.toArgb()),
-                        start = Offset(0f, 0f),
-                        end = Offset(0f, 240f)
+                        1.0f to AppTheme.colors.background.copy(0f),
                     )
                 )
                 .padding(
