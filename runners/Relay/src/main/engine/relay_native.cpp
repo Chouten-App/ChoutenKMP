@@ -8,23 +8,27 @@ m3ApiRawFunction(logFunc) {
 }
 
 m3ApiRawFunction(requestFunc) {
-    host_log("[requestFunc] Entering request function", strlen("[requestFunc] Entering request function"));
-    m3ApiGetArgMem(const char*, url);
-    m3ApiGetArg(i32, len);
-    m3ApiGetArg(i32, method);
+    try {
+        host_log("[requestFunc] Entering request function", strlen("[requestFunc] Entering request function"));
+        m3ApiGetArgMem(const char*, url);
+        m3ApiGetArg(i32, len);
+        m3ApiGetArg(i32, method);
 
-    char logBuf[256];
-    snprintf(logBuf, sizeof(logBuf), "[requestFunc] URL len=%d, method=%d", len, method);
-    host_log(logBuf, strlen(logBuf));
+        char logBuf[256];
+        snprintf(logBuf, sizeof(logBuf), "[requestFunc] URL len=%d, method=%d", len, method);
+        host_log(logBuf, strlen(logBuf));
 
-    i32 result = host_request(url, len, method);
+        i32 result = host_request(url, len, method);
 
-    snprintf(logBuf, sizeof(logBuf), "[requestFunc] host_request returned: %d", result);
-    host_log(logBuf, strlen(logBuf));
+        snprintf(logBuf, sizeof(logBuf), "[requestFunc] host_request returned: %d", result);
+        host_log(logBuf, strlen(logBuf));
 
-    _sp[0] = (uint64_t)result;
+        _sp[0] = (uint64_t) result;
+    } catch(...) {
+        host_log("Unknown error occurred.", sizeof("Unknown error occurred."));
+    }
 
-    return m3Err_none;
+    m3ApiSuccess()
 }
 
 Wasm3Module::Wasm3Module(const uint8_t* data, size_t size) {
@@ -61,7 +65,13 @@ Wasm3Module::Wasm3Module(const uint8_t* data, size_t size) {
     } else {
         host_log("[Wasm3Module] Linked log_host function", strlen("[Wasm3Module] Linked log_host function"));
     }
-//m3_LinkRawFunction(module, "env", "request_host", "i(iii)", &requestFunc);
+    M3Result requestLinkResult = m3_LinkRawFunction(module, "env", "request_host", "i(iii)", &requestFunc);
+    if (requestLinkResult) {
+        snprintf(logBuf, sizeof(logBuf), "[Wasm3Module] LinkRawFunction request_host FAILED: %s", requestLinkResult);
+        host_log(logBuf, strlen(logBuf));
+    } else {
+        host_log("[Wasm3Module] Linked request_host function", strlen("[Wasm3Module] Linked request_host function"));
+    }
 }
 
 Wasm3Module::~Wasm3Module() {

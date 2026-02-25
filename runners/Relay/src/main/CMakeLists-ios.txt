@@ -23,8 +23,12 @@ target_include_directories(relay PUBLIC
 # Compiler flags
 target_compile_options(relay PRIVATE
     -fPIC
-    -fno-exceptions
+    -fexceptions
     -Wno-extern-c-compat
+)
+
+target_compile_options(relay PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-fexceptions>
 )
 
 # For Objective-C++ files

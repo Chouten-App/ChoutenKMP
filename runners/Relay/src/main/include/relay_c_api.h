@@ -8,6 +8,7 @@ extern "C" {
 
     // Setup stuff
     void relay_set_logger(void (*logger)(const char*, size_t));
+    void relay_set_request_handler(const char* (*HostRequestFn)(const char* url, size_t len, int32_t method));
     void* relay_create_module(const uint8_t* bytes, size_t size);
     void relay_destroy_module(void* modulePtr);
 

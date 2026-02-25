@@ -3,6 +3,14 @@
 
 static void (*gHostLogger)(const char*, size_t) = nullptr;
 
+typedef const char* (*HostRequestFn)(const char* url, size_t len, int32_t method);
+
+static HostRequestFn gHostRequest = nullptr;
+
+extern "C" void relay_set_request_handler(HostRequestFn handler) {
+    gHostRequest = handler;
+}
+
 // Called from Swift to register logger
 extern "C" void relay_set_logger(void (*logger)(const char*, size_t)) {
     gHostLogger = logger;
@@ -17,8 +25,12 @@ void host_log(const char* msg, size_t len) {
 
 // Host request function - stub for now
 int32_t host_request(const char* url, size_t len, int32_t method) {
-    host_log("[host_request] Not yet implemented", 34);
-    return -1;
+    if (!gHostRequest) {
+        host_log("[host_request] No handler set", 30);
+        return -1;
+    }
+    const char* result = gHostRequest(url, len, method);
+    return result ? (int32_t)(intptr_t)result : -1;
 }
 
 extern "C" void* relay_create_module(const uint8_t* bytes, size_t size) {

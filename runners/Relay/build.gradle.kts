@@ -111,6 +111,10 @@ kotlin {
     }
 }
 
+tasks.matching { it.name.startsWith("cinteropRelay") }.configureEach {
+    outputs.upToDateWhen { false }
+}
+
 tasks.register<Exec>("configureRelayDesktop") {
     workingDir = file("src/main")
     commandLine(
@@ -160,7 +164,7 @@ if (isMac) {
 
         target_compile_options(relay PRIVATE
             -fPIC
-            -fno-exceptions
+            -fexceptions
             -Wno-extern-c-compat
         )
 
@@ -170,92 +174,68 @@ if (isMac) {
         )
     """.trimIndent()
 
-    // iOS Device (arm64)
-    val iosArm64BuildDir = file("build/ios-arm64")
-    val iosArm64CMakeFile = file("build/ios-arm64/CMakeLists.txt")
+    data class IosVariant(
+        val name: String,
+        val sysroot: String,
+        val target: String,
+    )
 
-    tasks.register("generateCMakeIosArm64") {
-        outputs.file(iosArm64CMakeFile)
-        doLast {
-            iosArm64BuildDir.mkdirs()
-            iosArm64CMakeFile.writeText(generateCMakeLists(srcDirPath))
+    val variants = listOf(
+        IosVariant("IosArm64",          "iphoneos",         "arm64-apple-ios16.0"),
+        IosVariant("IosSimulatorArm64", "iphonesimulator",  "arm64-apple-ios16.0-simulator"),
+    )
+
+    for (variant in variants) {
+        val buildDir = file("build/${variant.name.replace(Regex("([A-Z])"), "-$1").lowercase().trimStart('-')}")
+        val cmakeFile = buildDir.resolve("CMakeLists.txt")
+
+        tasks.register<Delete>("cleanRelay${variant.name}") {
+            delete(buildDir)
+        }
+
+        tasks.register("generateCMake${variant.name}") {
+            dependsOn("cleanRelay${variant.name}")
+            outputs.upToDateWhen { false }
+            doLast {
+                buildDir.mkdirs()
+                cmakeFile.writeText(generateCMakeLists(srcDirPath))
+            }
+        }
+
+        tasks.register<Exec>("configureRelay${variant.name}") {
+            dependsOn("generateCMake${variant.name}")
+            workingDir = buildDir
+            commandLine(
+                cmakePath,
+                "-S.", "-B.",
+                "-DCMAKE_SYSTEM_NAME=iOS",
+                "-DCMAKE_OSX_SYSROOT=${variant.sysroot}",
+                "-DCMAKE_OSX_ARCHITECTURES=arm64",
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DCMAKE_C_FLAGS=-target ${variant.target}",
+                "-DCMAKE_CXX_FLAGS=-target ${variant.target}"
+            )
+            outputs.upToDateWhen { false }
+        }
+
+        tasks.register<Exec>("compileRelay${variant.name}") {
+            dependsOn("configureRelay${variant.name}")
+            workingDir = buildDir
+            commandLine(cmakePath, "--build", ".")
+            outputs.upToDateWhen { false }
+        }
+
+        tasks.register("buildRelay${variant.name}") {
+            dependsOn("compileRelay${variant.name}")
+        }
+
+        tasks.matching { it.name == "cinteropRelay${variant.name}" }.configureEach {
+            dependsOn("buildRelay${variant.name}")
         }
     }
 
-    tasks.register<Exec>("configureRelayIosArm64") {
-        dependsOn("generateCMakeIosArm64")
-        workingDir = iosArm64BuildDir
-        commandLine(
-            cmakePath,
-            "-S.", "-B.",
-            "-DCMAKE_SYSTEM_NAME=iOS",
-            "-DCMAKE_OSX_SYSROOT=iphoneos",
-            "-DCMAKE_OSX_ARCHITECTURES=arm64",
-            "-DCMAKE_BUILD_TYPE=Release",
-            "-DCMAKE_C_FLAGS=-target arm64-apple-ios16.0",
-            "-DCMAKE_CXX_FLAGS=-target arm64-apple-ios16.0"
-        )
-    }
-
-    tasks.register<Exec>("compileRelayIosArm64") {
-        dependsOn("configureRelayIosArm64")
-        workingDir = iosArm64BuildDir
-        commandLine(cmakePath, "--build", ".")
-    }
-
-    tasks.register("buildRelayIosArm64") {
-        dependsOn("compileRelayIosArm64")
-    }
-
-    // iOS Simulator (arm64)
-    val iosSimArm64BuildDir = file("build/ios-simulator-arm64")
-    val iosSimArm64CMakeFile = file("build/ios-simulator-arm64/CMakeLists.txt")
-
-    tasks.register("generateCMakeIosSimulatorArm64") {
-        outputs.file(iosSimArm64CMakeFile)
-        doLast {
-            iosSimArm64BuildDir.mkdirs()
-            iosSimArm64CMakeFile.writeText(generateCMakeLists(srcDirPath))
-        }
-    }
-
-    tasks.register<Exec>("configureRelayIosSimulatorArm64") {
-        dependsOn("generateCMakeIosSimulatorArm64")
-        workingDir = iosSimArm64BuildDir
-        commandLine(
-            cmakePath,
-            "-S.", "-B.",
-            "-DCMAKE_SYSTEM_NAME=iOS",
-            "-DCMAKE_OSX_SYSROOT=iphonesimulator",
-            "-DCMAKE_OSX_ARCHITECTURES=arm64",
-            "-DCMAKE_BUILD_TYPE=Release",
-            "-DCMAKE_C_FLAGS=-target arm64-apple-ios16.0-simulator",
-            "-DCMAKE_CXX_FLAGS=-target arm64-apple-ios16.0-simulator"
-        )
-    }
-
-    tasks.register<Exec>("compileRelayIosSimulatorArm64") {
-        dependsOn("configureRelayIosSimulatorArm64")
-        workingDir = iosSimArm64BuildDir
-        commandLine(cmakePath, "--build", ".")
-    }
-
-    tasks.register("buildRelayIosSimulatorArm64") {
-        dependsOn("compileRelayIosSimulatorArm64")
-    }
-
-    // Combined task to build all iOS variants
     tasks.register("buildRelayIos") {
-        dependsOn("buildRelayIosArm64", "buildRelayIosSimulatorArm64")
-    }
-
-    // Wire up cinterop tasks to depend on native builds
-    tasks.matching { it.name == "cinteropRelayIosArm64" }.configureEach {
-        dependsOn("buildRelayIosArm64")
-    }
-
-    tasks.matching { it.name == "cinteropRelayIosSimulatorArm64" }.configureEach {
-        dependsOn("buildRelayIosSimulatorArm64")
+        dependsOn(variants.map { "buildRelay${it.name}" })
     }
 }
 
