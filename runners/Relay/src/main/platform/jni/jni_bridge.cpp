@@ -56,7 +56,7 @@ int32_t host_request(const char* url, size_t len, int32_t method) {
     if (!cls) return -1;
 
     host_log("[requestFunc] Finding Kotlin request func", strlen("[requestFunc] Finding kotlin request func"));
-    jmethodID requestId = env->GetMethodID(cls, "request", "(Ljava/lang/String;I)I");
+    jmethodID requestId = env->GetMethodID(cls, "request", "(Ljava/lang/String;I)Ljava/lang/Object");
     if (!requestId) {
         env->DeleteLocalRef(cls);
         env->DeleteLocalRef(jurl);
@@ -64,12 +64,12 @@ int32_t host_request(const char* url, size_t len, int32_t method) {
     }
 
     host_log("[requestFunc] Calling Kotlin request func", strlen("[requestFunc] Calling kotlin request func"));
-    jint result = env->CallIntMethod(gNativeBridgeObj, requestId, jurl, jmethod);
+    jobject result = env->CallObjectMethod(gNativeBridgeObj, requestId, jurl, jmethod);
 
     env->DeleteLocalRef(jurl);
     env->DeleteLocalRef(cls);
 
-    return (int32_t)result;
+    return (int32_t)result.statusCode;
 }
 
 

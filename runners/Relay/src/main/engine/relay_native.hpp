@@ -9,6 +9,11 @@ void host_log(const char* msg, size_t len);
 int32_t host_request(const char* url, size_t len, int32_t method);
 
 m3ApiRawFunction(logFunc);
+struct HttpResponse {
+    uint32_t status_code;
+    uint32_t body_ptr;
+    uint32_t body_len;
+};
 
 struct Wasm3Module {
     IM3Environment env;

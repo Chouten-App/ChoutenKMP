@@ -5,9 +5,13 @@ package dev.chouten.runners.relay
 actual object NativeBridge {
     init { System.loadLibrary("relay") }
 
-    actual fun request(url: String, method: Int): Int {
+    actual fun request(url: String, method: Int): HttpResponse {
         println("Requesting url: $url, method: $method")
-        return 0
+        return HttpResponse(
+            statusCode = 200,
+            body = "TEMP",
+            headers = mapOf(),
+        )
     }
 
     external fun nativeLoadWasm(bytes: ByteArray)

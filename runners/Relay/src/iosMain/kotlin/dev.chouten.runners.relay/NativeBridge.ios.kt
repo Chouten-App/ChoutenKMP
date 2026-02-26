@@ -23,8 +23,13 @@ private val responseArena = Arena()
 actual object NativeBridge {
 
     //TODO
-    actual fun request(url: String, method: Int): Int {
-        TODO("Not yet implemented")
+    actual fun request(url: String, method: Int): HttpResponse {
+        println("Requesting url: $url, method: $method")
+        return HttpResponse(
+            statusCode = 200,
+            body = "TEMP",
+            headers = mapOf(),
+        )
     }
 
     actual fun callMethod(name: String): String {

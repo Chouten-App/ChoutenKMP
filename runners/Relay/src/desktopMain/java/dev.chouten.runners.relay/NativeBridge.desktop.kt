@@ -14,9 +14,13 @@ actual object NativeBridge {
         System.load(path.absolutePath)
     }
 
-    actual fun request(url: String, method: Int): Int {
-        println("Requesting data from URL: $url")
-        return 0
+    actual fun request(url: String, method: Int): HttpResponse {
+        println("Requesting url: $url, method: $method")
+        return HttpResponse(
+            statusCode = 200,
+            body = "TEMP",
+            headers = mapOf(),
+        )
     }
 
     private external fun gHostLogSet(fn: (bytes: ByteArray, len: Int) -> Unit)

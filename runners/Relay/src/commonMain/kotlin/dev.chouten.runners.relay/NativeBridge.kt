@@ -31,8 +31,14 @@ object RelayLogger {
     }
 }
 
+data class HttpResponse(
+    val statusCode: Int,
+    val body: String?,
+    val headers: Map<String, String>
+)
+
 expect object NativeBridge {
-    fun request(url: String, method: Int): Int
+    fun request(url: String, method: Int): HttpResponse
     fun initLogger(logger: Any)
     fun initNativeBridge(nativeBridge: NativeBridge)
     fun load(bytes: ByteArray)
