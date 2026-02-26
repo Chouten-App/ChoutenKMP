@@ -23,6 +23,7 @@ actual object NativeBridge {
 
     external fun nativeLoadWasm(bytes: ByteArray)
     actual external fun initLogger(logger: Any)
+    actual external fun initNativeBridge(nativeBridge: NativeBridge)
 
     actual fun load(bytes: ByteArray) {
         nativeLoadWasm(bytes)

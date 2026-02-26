@@ -93,4 +93,6 @@ actual object NativeBridge {
             }
         })
     }
+
+    actual fun initNativeBridge(nativeBridge: NativeBridge) {}
 }

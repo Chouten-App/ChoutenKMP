@@ -31,6 +31,7 @@ class DevClientManager {
         devClient = startDevClient(cliIP) { wasm, client ->
             println("📦 Binary frame received: ${wasm.size} bytes")
             NativeBridge.load(wasm)
+            NativeBridge.initNativeBridge(NativeBridge)
             RelayLogger.devClient = client
 
             try {

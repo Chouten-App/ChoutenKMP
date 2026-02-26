@@ -8,6 +8,7 @@ m3ApiRawFunction(logFunc) {
 }
 
 m3ApiRawFunction(requestFunc) {
+    m3ApiReturnType(uint32_t)
     try {
         host_log("[requestFunc] Entering request function", strlen("[requestFunc] Entering request function"));
         m3ApiGetArgMem(const char*, url);
@@ -24,6 +25,7 @@ m3ApiRawFunction(requestFunc) {
         host_log(logBuf, strlen(logBuf));
 
         _sp[0] = (uint64_t) result;
+        m3ApiSuccess();
     } catch(...) {
         host_log("Unknown error occurred.", sizeof("Unknown error occurred."));
     }

@@ -256,7 +256,7 @@ android {
             cmake {
                 // safer flags
                 arguments += "-DANDROID_STL=c++_shared"
-                cppFlags += "-std=c++17 -fno-limit-debug-info"
+                cppFlags += "-std=c++17 -fno-limit-debug-info -fexceptions"
             }
         }
     }

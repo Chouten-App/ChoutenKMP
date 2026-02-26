@@ -36,6 +36,7 @@ void host_log(const char* msg, size_t len) {
 }
 
 int32_t host_request(const char* url, size_t len, int32_t method) {
+    host_log("[requestFunc] Calling host request func", strlen("[requestFunc] Calling host request func"));
     if (!gJvm || !gNativeBridgeObj) return -1;
 
     JNIEnv* env = nullptr;
@@ -43,20 +44,18 @@ int32_t host_request(const char* url, size_t len, int32_t method) {
         return -1;
     }
 
-    // Copy Wasm memory into a temporary buffer + null terminator
-    std::vector<char> buf(len + 1);
-    memcpy(buf.data(), url, len);
-    buf[len] = '\0';  // ensure null-terminated
-
-    // Optional: validate UTF-8 here if needed
-    jstring jurl = env->NewStringUTF(buf.data());
+    host_log("[requestFunc] Create jstring url", strlen("[requestFunc] Create jstring url"));
+    jstring jurl = env->NewStringUTF(std::string(url, len).c_str());
     if (!jurl) return -1; // allocation failed
 
+    host_log("[requestFunc] Convert method into jint", strlen("[requestFunc] Convert method into jint"));
     jint jmethod = (jint)method;
 
+    host_log("[requestFunc] Finding NativeBridge", strlen("[requestFunc] Finding NativeBridge"));
     jclass cls = env->GetObjectClass(gNativeBridgeObj);
     if (!cls) return -1;
 
+    host_log("[requestFunc] Finding Kotlin request func", strlen("[requestFunc] Finding kotlin request func"));
     jmethodID requestId = env->GetMethodID(cls, "request", "(Ljava/lang/String;I)I");
     if (!requestId) {
         env->DeleteLocalRef(cls);
@@ -64,6 +63,7 @@ int32_t host_request(const char* url, size_t len, int32_t method) {
         return -1;
     }
 
+    host_log("[requestFunc] Calling Kotlin request func", strlen("[requestFunc] Calling kotlin request func"));
     jint result = env->CallIntMethod(gNativeBridgeObj, requestId, jurl, jmethod);
 
     env->DeleteLocalRef(jurl);
@@ -81,6 +81,12 @@ extern "C" {
     Java_dev_chouten_runners_relay_NativeBridge_initLogger(JNIEnv* env, jobject thiz, jobject logger) {
         env->GetJavaVM(&gJvm);
         gLoggerObj = env->NewGlobalRef(logger);
+    }
+
+    JNIEXPORT void JNICALL
+    Java_dev_chouten_runners_relay_NativeBridge_initNativeBridge(JNIEnv* env, jobject thiz, jobject nativeBridge) {
+        env->GetJavaVM(&gJvm);
+        gNativeBridgeObj = env->NewGlobalRef(nativeBridge);
     }
 
     // Load WASM module from byte array
