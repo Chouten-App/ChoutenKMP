@@ -38,7 +38,7 @@ data class HttpResponse(
 )
 
 expect object NativeBridge {
-    fun request(url: String, method: Int): HttpResponse
+    fun request(url: String, method: Int): String
     fun initLogger(logger: Any)
     fun initNativeBridge(nativeBridge: NativeBridge)
     fun load(bytes: ByteArray)

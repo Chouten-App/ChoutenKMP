@@ -78,6 +78,8 @@ kotlin {
                 implementation("io.coil-kt.coil3:coil-compose:3.3.0")
                 implementation("io.coil-kt.coil3:coil-svg:3.0.4")
                 implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
                 implementation(project(":core:UI"))
             }
