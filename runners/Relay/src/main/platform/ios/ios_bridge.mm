@@ -48,7 +48,7 @@ uint32_t host_html_parse(const char* html, size_t len) {
         gHostHtmlParse(html, len);
     }
 
-    return -1
+    return -1;
 }
 
 extern "C" void* relay_create_module(const uint8_t* bytes, size_t size) {
