@@ -35,25 +35,25 @@ void host_log(const char* msg, size_t len) {
     env->DeleteLocalRef(jmsg);
 }
 
-int32_t host_request(const char* url, size_t len, int32_t method) {
+const char* host_request(const char *url, size_t len, int32_t method, uint32_t *pInt) {
     host_log("[requestFunc] Calling host request func", strlen("[requestFunc] Calling host request func"));
-    if (!gJvm || !gNativeBridgeObj) return -1;
+    if (!gJvm || !gNativeBridgeObj) return "";
 
     JNIEnv* env = nullptr;
     if (gJvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
-        return -1;
+        return "";
     }
 
     host_log("[requestFunc] Create jstring url", strlen("[requestFunc] Create jstring url"));
     jstring jurl = env->NewStringUTF(std::string(url, len).c_str());
-    if (!jurl) return -1; // allocation failed
+    if (!jurl) return ""; // allocation failed
 
     host_log("[requestFunc] Convert method into jint", strlen("[requestFunc] Convert method into jint"));
     jint jmethod = (jint)method;
 
     host_log("[requestFunc] Finding NativeBridge", strlen("[requestFunc] Finding NativeBridge"));
     jclass cls = env->GetObjectClass(gNativeBridgeObj);
-    if (!cls) return -1;
+    if (!cls) return "";
 
     host_log("[requestFunc] Finding Kotlin request func", strlen("[requestFunc] Finding kotlin request func"));
     jmethodID requestId = env->GetMethodID(
@@ -64,7 +64,7 @@ int32_t host_request(const char* url, size_t len, int32_t method) {
     if (!requestId) {
         env->DeleteLocalRef(cls);
         env->DeleteLocalRef(jurl);
-        return -1;
+        return "";
     }
 
     host_log("[requestFunc] Calling Kotlin request func", strlen("[requestFunc] Calling kotlin request func"));
@@ -77,7 +77,7 @@ int32_t host_request(const char* url, size_t len, int32_t method) {
     env->ReleaseStringUTFChars(result, utf);
     env->DeleteLocalRef(result);
 
-    return (int32_t)utf;
+    return utf;
 }
 
 

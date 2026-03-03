@@ -2,6 +2,7 @@ package dev.chouten.runners.relay
 
 import com.inumaki.core.ui.model.DevClient
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 
 object RelayLogger {
@@ -31,6 +32,7 @@ object RelayLogger {
     }
 }
 
+@Serializable
 data class HttpResponse(
     val statusCode: Int,
     val body: String?,

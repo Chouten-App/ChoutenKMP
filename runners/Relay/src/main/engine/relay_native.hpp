@@ -6,14 +6,9 @@
 int32_t relay_add(int32_t a, int32_t b);
 
 void host_log(const char* msg, size_t len);
-int32_t host_request(const char* url, size_t len, int32_t method);
+const char* host_request(const char *url, size_t len, int32_t method, uint32_t *pInt);
+u32 host_html_parse(const char* html, size_t len);
 
-m3ApiRawFunction(logFunc);
-struct HttpResponse {
-    uint32_t status_code;
-    uint32_t body_ptr;
-    uint32_t body_len;
-};
 
 struct Wasm3Module {
     IM3Environment env;
