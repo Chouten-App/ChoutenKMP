@@ -8,7 +8,8 @@ int32_t relay_add(int32_t a, int32_t b);
 void host_log(const char* msg, size_t len);
 const char* host_request(const char *url, size_t len, int32_t method, uint32_t *pInt);
 u32 host_html_parse(const char* html, size_t len);
-
+u32 host_query_selector(size_t docId, const char* query, size_t len);
+const char* host_node_text(size_t nodeId, uint32_t *pInt);
 
 struct Wasm3Module {
     IM3Environment env;

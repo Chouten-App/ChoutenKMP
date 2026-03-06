@@ -80,6 +80,7 @@ kotlin {
                 implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+                implementation("com.fleeksoft.ksoup:ksoup:0.2.6")
 
                 implementation(project(":core:UI"))
                 implementation(project(":core:repository"))

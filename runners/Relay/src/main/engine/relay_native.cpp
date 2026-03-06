@@ -1,6 +1,8 @@
 #include "relay_native.hpp"
 
 IM3Function alloc_fn;
+IM3Function grow_memory_fn;
+IM3Function store_response_fn;
 
 m3ApiRawFunction(logFunc) {
     m3ApiGetArgMem(const char*, msg);
@@ -16,14 +18,112 @@ struct RelayResponse {
 
 m3ApiRawFunction(requestFunc)
 {
-    m3ApiReturnType(u32)
-
+    m3ApiReturnType(u32)  // Return pointer to struct
     m3ApiGetArgMem(const char*, url);
     m3ApiGetArg(i32, len);
     m3ApiGetArg(i32, method);
 
+    // Get response from host
     uint32_t resp_len = 0;
     const char* resp_data = host_request(url, len, method, &resp_len);
+
+    if (!resp_data || resp_len == 0) {
+        host_log("ERROR: No response", 18);
+        m3ApiReturn(0);
+    }
+
+    char log_buf[128];
+    snprintf(log_buf, sizeof(log_buf), "Response: %u bytes", resp_len);
+    host_log(log_buf, strlen(log_buf));
+
+    // Allocate body in WASM
+    const void* alloc_args[1] = { &resp_len };
+    M3Result res = m3_Call(alloc_fn, 1, alloc_args);
+
+    if (res != m3Err_none) {
+        host_log("Body alloc failed", 17);
+        m3ApiReturn(0);
+    }
+
+    uint32_t body_ptr = 0;
+    const void* alloc_ret[1] = { &body_ptr };
+    m3_GetResults(alloc_fn, 1, alloc_ret);
+
+    if (body_ptr == 0) {
+        host_log("Null body pointer", 17);
+        m3ApiReturn(0);
+    }
+
+    // Copy data to WASM memory
+    uint8_t* memory = m3_GetMemory(runtime, nullptr, 0);
+    memcpy(memory + body_ptr, resp_data, resp_len);
+
+    snprintf(log_buf, sizeof(log_buf), "Copied to ptr=%u", body_ptr);
+    host_log(log_buf, strlen(log_buf));
+
+    // Allocate struct (8 bytes for two u32s)
+    uint32_t struct_size = 8;
+    const void* struct_args[1] = { &struct_size };
+    res = m3_Call(alloc_fn, 1, struct_args);
+
+    if (res != m3Err_none) {
+        host_log("Struct alloc failed", 19);
+        m3ApiReturn(0);
+    }
+
+    uint32_t struct_ptr = 0;
+    const void* struct_ret[1] = { &struct_ptr };
+    m3_GetResults(alloc_fn, 1, struct_ret);
+
+    if (struct_ptr == 0) {
+        host_log("Null struct pointer", 19);
+        m3ApiReturn(0);
+    }
+
+    // Write struct: [body_ptr, body_len]
+    memory = m3_GetMemory(runtime, nullptr, 0);
+    uint32_t* struct_data = (uint32_t*)(memory + struct_ptr);
+    struct_data[0] = body_ptr;
+    struct_data[1] = resp_len;
+
+    snprintf(log_buf, sizeof(log_buf), "Struct at %u: ptr=%u len=%u",
+            struct_ptr, struct_data[0], struct_data[1]);
+    host_log(log_buf, strlen(log_buf));
+
+    // Return pointer to struct
+    m3ApiReturn(struct_ptr);
+}
+
+m3ApiRawFunction(htmlParseFunc) {
+    m3ApiReturnType(u32)
+    m3ApiGetArgMem(const char*, html);
+    m3ApiGetArg(i32, len);
+
+    u32 id = host_html_parse(html, len);
+
+    m3ApiReturn(id)
+}
+
+m3ApiRawFunction(querySelectorFunc) {
+    m3ApiReturnType(u32)
+
+    m3ApiGetArg(i32, docId);
+    m3ApiGetArgMem(const char*, query);
+    m3ApiGetArg(i32, len);
+
+    u32 id = host_query_selector(docId, query, len);
+
+    m3ApiReturn(id)
+}
+
+m3ApiRawFunction(nodeTextFunc)
+{
+    m3ApiReturnType(u32)
+
+    m3ApiGetArg(i32, nodeId);
+
+    uint32_t resp_len = 0;
+    const char* resp_data = host_node_text(nodeId, &resp_len);
 
     if (!resp_data || resp_len == 0)
     m3ApiReturn(0);
@@ -54,15 +154,6 @@ m3ApiRawFunction(requestFunc)
     m3ApiReturn(struct_offset);
 }
 
-m3ApiRawFunction(htmlParseFunc) {
-    m3ApiReturnType(u32)
-    m3ApiGetArgMem(const char*, html);
-    m3ApiGetArg(i32, len);
-
-    u32 id = host_html_parse(html, len);
-
-    m3ApiReturn(id)
-}
 
 Wasm3Module::Wasm3Module(const uint8_t* data, size_t size) {
     char logBuf[256];
@@ -72,8 +163,8 @@ Wasm3Module::Wasm3Module(const uint8_t* data, size_t size) {
     env = m3_NewEnvironment();
     host_log("[Wasm3Module] Environment created", strlen("[Wasm3Module] Environment created"));
 
-    runtime = m3_NewRuntime(env, 1024*1024*5, nullptr);
-    host_log("[Wasm3Module] Runtime created (5MB stack)", strlen("[Wasm3Module] Runtime created (5MB stack)"));
+    runtime = m3_NewRuntime(env, 1024*1024*64, nullptr);
+    host_log("[Wasm3Module] Runtime created (64MB stack)", strlen("[Wasm3Module] Runtime created (64MB stack)"));
 
     M3Result parseResult = m3_ParseModule(env, &module, data, size);
     if (parseResult) {
@@ -92,6 +183,13 @@ Wasm3Module::Wasm3Module(const uint8_t* data, size_t size) {
     }
 
     M3Result alloc_result = m3_FindFunction(&alloc_fn, runtime, "alloc");
+    if (alloc_result) {
+        host_log("Alloc fn not found", strlen("Alloc fn not found"));
+    }
+    M3Result grow_result = m3_FindFunction(&grow_memory_fn, runtime, "grow_memory");
+    if (grow_result) {
+        host_log("Grow fn not found", strlen("Grow fn not found"));
+    }
 
     M3Result linkResult = m3_LinkRawFunction(module, "env", "log_host", "v(ii)", &logFunc);
     if (linkResult) {
@@ -100,12 +198,33 @@ Wasm3Module::Wasm3Module(const uint8_t* data, size_t size) {
     } else {
         host_log("[Wasm3Module] Linked log_host function", strlen("[Wasm3Module] Linked log_host function"));
     }
-    M3Result requestLinkResult = m3_LinkRawFunction(module, "env", "request_host", "i(iii)", &requestFunc);
-    if (requestLinkResult) {
-        snprintf(logBuf, sizeof(logBuf), "[Wasm3Module] LinkRawFunction request_host FAILED: %s", requestLinkResult);
+    linkResult = m3_LinkRawFunction(module, "env", "request_host", "i(iii)", &requestFunc);
+    if (linkResult) {
+        snprintf(logBuf, sizeof(logBuf), "[Wasm3Module] LinkRawFunction request_host FAILED: %s", linkResult);
         host_log(logBuf, strlen(logBuf));
     } else {
         host_log("[Wasm3Module] Linked request_host function", strlen("[Wasm3Module] Linked request_host function"));
+    }
+    linkResult = m3_LinkRawFunction(module, "env", "html_parse_host", "i(ii)", &htmlParseFunc);
+    if (linkResult) {
+        snprintf(logBuf, sizeof(logBuf), "[Wasm3Module] LinkRawFunction html_parse_host FAILED: %s", linkResult);
+        host_log(logBuf, strlen(logBuf));
+    } else {
+        host_log("[Wasm3Module] Linked html_parse_host function", strlen("[Wasm3Module] Linked html_parse_host function"));
+    }
+    linkResult = m3_LinkRawFunction(module, "env", "html_query_selector_host", "i(iii)", &querySelectorFunc);
+    if (linkResult) {
+        snprintf(logBuf, sizeof(logBuf), "[Wasm3Module] LinkRawFunction html_query_selector_host FAILED: %s", linkResult);
+        host_log(logBuf, strlen(logBuf));
+    } else {
+        host_log("[Wasm3Module] Linked html_query_selector_host function", strlen("[Wasm3Module] Linked html_query_selector_host function"));
+    }
+    linkResult = m3_LinkRawFunction(module, "env", "html_node_text_host", "i(ii)", &nodeTextFunc);
+    if (linkResult) {
+        snprintf(logBuf, sizeof(logBuf), "[Wasm3Module] LinkRawFunction html_node_text_host FAILED: %s", linkResult);
+        host_log(logBuf, strlen(logBuf));
+    } else {
+        host_log("[Wasm3Module] Linked html_node_text_host function", strlen("[Wasm3Module] Linked html_node_text_host function"));
     }
 }
 
@@ -131,6 +250,10 @@ int32_t Wasm3Module::add(int32_t a, int32_t b) {
         return 0;
     }
 
+    M3Result store_response_result = m3_FindFunction(&store_response_fn, runtime, "store_response");
+    if (store_response_result) {
+        host_log("Store fn not found", strlen("Store fn not found"));
+    }
     M3Result result = m3_FindFunction(&func, runtime, "add");
     if (result) {
         snprintf(logBuf, sizeof(logBuf), "[add] m3_FindFunction FAILED: %s", result);
@@ -167,6 +290,10 @@ const char* Wasm3Module::callMethod(const char* name) {
         return nullptr;
     }
 
+    M3Result store_response_result = m3_FindFunction(&store_response_fn, runtime, "store_response");
+    if (store_response_result) {
+        host_log("Store fn not found", strlen("Store fn not found"));
+    }
     M3Result result = m3_FindFunction(&func, runtime, name);
     if (result) {
         snprintf(logBuf, sizeof(logBuf), "[callMethod] m3_FindFunction FAILED: %s", result);
