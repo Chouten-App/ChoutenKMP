@@ -23,6 +23,7 @@ import kotlin.concurrent.AtomicInt
 // Pointer to the currently loaded WASM module (managed by C++ code)
 private var modulePtr: COpaquePointer? = null
 private val responseArena = Arena()
+private val responseArenas = mutableListOf<Arena>()
 
 typealias HostRequestFn = CPointer<CFunction<(
     url: CPointer<ByteVar>?,
@@ -56,26 +57,20 @@ actual object NativeBridge {
             method: Int,
             out_len: CPointer<UIntVar>?
         ->
-        // Convert C string to Kotlin String
         val urlString = url?.readBytes(len.toInt())?.decodeToString() ?: ""
-
-        // Call your request function with the parameters
         val response = request(urlString, method)
 
-        // Convert response to C string
-        responseArena.clear()
         val responseBytes = response.encodeToByteArray()
-        val cString = responseArena.allocArray<ByteVar>(responseBytes.size + 1)
 
-        // Copy bytes one by one
+        // ✅ Allocate on native heap - caller must free
+        val cString = nativeHeap.allocArray<ByteVar>(responseBytes.size + 1)
+
         for (i in responseBytes.indices) {
             cString[i] = responseBytes[i]
         }
-        cString[responseBytes.size] = 0.toByte() // Null terminator
+        cString[responseBytes.size] = 0.toByte()
 
-        // Set output length
         out_len?.pointed?.value = responseBytes.size.toUInt()
-
         cString
     }
 
@@ -233,14 +228,20 @@ actual object NativeBridge {
      * Uses usePinned to prevent GC from moving the byte array while C is reading it.
      */
     actual fun load(bytes: ByteArray) {
-        // Destroy previous module if exists
-        modulePtr?.let { relay_destroy_module(it) }
+        relay_set_request_handler(null)
+        relay_set_html_parse_handler(null)
+        relay_set_query_selector_handler(null)
+        relay_set_node_text_handler(null)
 
-        // Pin the byte array in memory so C can safely read it
+        modulePtr?.let {
+            relay_destroy_module(it)
+            modulePtr = null
+        }
+
         bytes.usePinned { pinned ->
             modulePtr = relay_create_module(
-                pinned.addressOf(0).reinterpret(),  // Convert to C pointer type
-                bytes.size.convert<size_t>()         // Convert Int to size_t
+                pinned.addressOf(0).reinterpret(),
+                bytes.size.convert<size_t>()
             )
         }
 
@@ -255,8 +256,7 @@ actual object NativeBridge {
      * Returns 0 if no module is loaded.
      */
     actual fun add(a: Int, b: Int): Int {
-        val ptr = modulePtr ?: return 0
-        return relay_add(ptr, a, b)
+        return 0
     }
 
     /**

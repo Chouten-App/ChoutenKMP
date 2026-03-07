@@ -91,11 +91,6 @@ extern "C" void* relay_create_module(const uint8_t* bytes, size_t size) {
     return new Wasm3Module(bytes, size);
 }
 
-extern "C" int relay_add(void* modulePtr, int a, int b) {
-    Wasm3Module* module = (Wasm3Module*)modulePtr;
-    return module->add(a, b);
-}
-
 extern "C" const char* relay_callMethod(void* modulePtr, const char* name) {
     Wasm3Module* module = (Wasm3Module*)modulePtr;
     return module->callMethod(name);

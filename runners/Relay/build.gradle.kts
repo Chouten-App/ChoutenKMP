@@ -142,41 +142,7 @@ tasks.register("buildRelayDesktop") {
 // iOS Native Build Tasks
 if (isMac) {
     val srcDirPath = file("src/main").absolutePath
-
-    fun generateCMakeLists(srcDir: String) = """
-        cmake_minimum_required(VERSION 3.18)
-        project(relay_ios C CXX OBJCXX)
-
-        set(CMAKE_C_STANDARD 11)
-        set(CMAKE_CXX_STANDARD 17)
-
-        set(SRC_DIR "$srcDir")
-
-        file(GLOB WASM3_SRC "${'$'}{SRC_DIR}/wasm3/*.c")
-
-        add_library(relay STATIC
-            ${'$'}{WASM3_SRC}
-            ${'$'}{SRC_DIR}/engine/relay_native.cpp
-            ${'$'}{SRC_DIR}/platform/ios/ios_bridge.mm
-        )
-
-        target_include_directories(relay PUBLIC
-            ${'$'}{SRC_DIR}/include
-            ${'$'}{SRC_DIR}/engine
-            ${'$'}{SRC_DIR}/wasm3
-        )
-
-        target_compile_options(relay PRIVATE
-            -fPIC
-            -fexceptions
-            -Wno-extern-c-compat
-        )
-
-        set_source_files_properties(
-            ${'$'}{SRC_DIR}/platform/ios/ios_bridge.mm
-            PROPERTIES COMPILE_FLAGS "-fobjc-arc"
-        )
-    """.trimIndent()
+    val cmakeListsPath = file("src/main/CMakeLists.txt").absolutePath
 
     data class IosVariant(
         val name: String,
@@ -191,27 +157,24 @@ if (isMac) {
 
     for (variant in variants) {
         val buildDir = file("build/${variant.name.replace(Regex("([A-Z])"), "-$1").lowercase().trimStart('-')}")
-        val cmakeFile = buildDir.resolve("CMakeLists.txt")
 
         tasks.register<Delete>("cleanRelay${variant.name}") {
             delete(buildDir)
         }
 
-        tasks.register("generateCMake${variant.name}") {
-            dependsOn("cleanRelay${variant.name}")
-            outputs.upToDateWhen { false }
-            doLast {
-                buildDir.mkdirs()
-                cmakeFile.writeText(generateCMakeLists(srcDirPath))
-            }
-        }
-
         tasks.register<Exec>("configureRelay${variant.name}") {
-            dependsOn("generateCMake${variant.name}")
+            dependsOn("cleanRelay${variant.name}")
             workingDir = buildDir
+
+            doFirst {
+                buildDir.mkdirs()
+            }
+
             commandLine(
                 cmakePath,
-                "-S.", "-B.",
+                "-S", srcDirPath,  // Source directory with CMakeLists.txt
+                "-B", buildDir.absolutePath,  // Build directory
+                "-DIOS=ON",  // Enable iOS mode
                 "-DCMAKE_SYSTEM_NAME=iOS",
                 "-DCMAKE_OSX_SYSROOT=${variant.sysroot}",
                 "-DCMAKE_OSX_ARCHITECTURES=arm64",
