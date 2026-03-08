@@ -8,19 +8,14 @@ import kotlinx.serialization.Serializable
 object RelayLogger {
     var logs: List<String> = listOf()
 
-    // Optional DevClient; if null, fallback to println
     var devClient: DevClient? = null
 
-    // Called from native C++ / WASM
     fun log(message: String) {
         logs += message
 
-        // Always print locally
         println("RelayWASM -> $message")
 
-        // If a dev client is set, send asynchronously
         devClient?.let { client ->
-            // Fire-and-forget coroutine
             kotlinx.coroutines.GlobalScope.launch {
                 try {
                     client.sendLog(message)

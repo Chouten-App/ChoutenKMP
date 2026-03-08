@@ -1,6 +1,10 @@
 #include "relay_native.hpp"
 #include "relay_host_functions.h"
 
+IM3Function alloc_fn;
+IM3Function grow_memory_fn;
+IM3Function store_response_fn;
+
 inline void logWasm3Result(M3Result result, const char* action) {
     char logBuf[256];
     if (result) {
@@ -76,7 +80,11 @@ void Wasm3Module::initHostFunctions() const {
             {"request_host", "i(iii)", &requestFunc},
             {"html_parse_host", "i(ii)", &htmlParseFunc},
             {"html_query_selector_host", "i(iii)", &querySelectorFunc},
-            {"html_node_text_host", "i(ii)", &nodeTextFunc}
+            {"html_query_selector_all_host", "i(iiii)", &querySelectorAllFunc},
+            {"html_node_text_host", "i(ii)", &nodeTextFunc},
+            {"html_node_attr_host", "i(iiii)", &nodeAttrFunc},
+            {"html_node_query_selector_host", "i(iii)", &nodeQuerySelectorFunc},
+            {"html_node_query_selector_all_host", "i(iiii)", &nodeQuerySelectorAllFunc}
     };
 
     char logBuf[256];

@@ -26,8 +26,6 @@ add_library(relay ${LIBRARY_TYPE}
     ${PLATFORM_SOURCES}
 )
 
-target_link_libraries(relay PRIVATE wasm3)
-
 target_include_directories(relay PUBLIC
     include
     engine

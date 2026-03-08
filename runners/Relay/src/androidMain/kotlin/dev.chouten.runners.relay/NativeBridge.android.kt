@@ -1,5 +1,13 @@
 package dev.chouten.runners.relay
 
+import dev.chouten.core.repository.httpClient
+import io.ktor.client.request.request
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpMethod
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.Json.Default.encodeToString
 
 
@@ -8,13 +16,31 @@ actual object NativeBridge {
 
     actual fun request(url: String, method: Int): String {
         println("Requesting url: $url, method: $method")
-        val response = HttpResponse(
-            statusCode = 200,
-            body = "TEMP",
-            headers = mapOf(),
-        )
 
-        return encodeToString(response)
+        return runBlocking {
+            val response = withContext(Dispatchers.IO) {
+                httpClient.request(url) {
+                    // Configure your request here
+                    this.method = when (method) {
+                        0 -> HttpMethod.Get
+                        1 -> HttpMethod.Post
+                        // Add other methods as needed
+                        else -> HttpMethod.Get
+                    }
+                }
+            }
+
+            val httpResponse = HttpResponse(
+                statusCode = response.status.value,
+                body = response.bodyAsText(),
+                headers = emptyMap()//response.headers.toMap(),
+            )
+            println("Response -> $httpResponse")
+
+            val jsonString = Json.encodeToString(httpResponse)
+            println("JSON Length: ${jsonString.length}")  // Debug
+            jsonString
+        }
     }
 
     external fun nativeLoadWasm(bytes: ByteArray)

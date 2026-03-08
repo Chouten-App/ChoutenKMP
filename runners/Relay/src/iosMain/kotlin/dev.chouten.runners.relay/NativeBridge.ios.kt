@@ -32,8 +32,24 @@ typealias HostRequestFn = CPointer<CFunction<(
     out_len: CPointer<UIntVar>?
 ) -> CPointer<ByteVar>?>>
 
+
+typealias HostQuerySelectorAllFn = CPointer<CFunction<(
+    id: ULong,
+    query: CPointer<ByteVar>?,
+    len: ULong,
+    out_len: CPointer<UIntVar>?
+) -> CPointer<UIntVarOf<UInt>>?>>?
+
 typealias HostNodeTextFn = CPointer<CFunction<(
     nodeId: ULong,
+    out_len: CPointer<UIntVar>?
+) -> CPointer<ByteVar>?>>
+
+
+typealias HostNodeAttrFn = CPointer<CFunction<(
+    id: ULong,
+    attr: CPointer<ByteVar>?,
+    len: ULong,
     out_len: CPointer<UIntVar>?
 ) -> CPointer<ByteVar>?>>
 
@@ -62,7 +78,6 @@ actual object NativeBridge {
 
         val responseBytes = response.encodeToByteArray()
 
-        // ✅ Allocate on native heap - caller must free
         val cString = nativeHeap.allocArray<ByteVar>(responseBytes.size + 1)
 
         for (i in responseBytes.indices) {
@@ -122,33 +137,6 @@ actual object NativeBridge {
         println("[querySelector] Selector: '$selectorString'")
 
         val doc = documents[id.toInt()] ?: return@staticCFunction 0.toUInt()
-
-        // Dump the actual HTML structure
-        println("[querySelector] === DOCUMENT HTML (first 2000 chars) ===")
-        println(doc.html().take(2000))
-        println("[querySelector] === END HTML ===")
-
-        // Check all elements with class attribute
-        val elementsWithClass = doc.select("[class]")
-        println("[querySelector] Elements with class attribute: ${elementsWithClass.size}")
-
-        if (elementsWithClass.isNotEmpty()) {
-            println("[querySelector] First 10 elements with classes:")
-            elementsWithClass.take(10).forEach {
-                println("  - <${it.tagName()}> classes: ${it.classNames()}")
-            }
-        }
-
-        // Check if "title" appears anywhere in class names
-        val titleElements = doc.select("*").filter {
-            it.classNames().any { cls -> cls.contains("title", ignoreCase = true) }
-        }
-        println("[querySelector] Elements with 'title' in class name: ${titleElements.size}")
-
-        // Try attribute selector
-        val byAttribute = doc.select("[class*=title]")
-        println("[querySelector] By attribute [class*=title]: ${byAttribute.size}")
-
         val element = doc.selectFirst(selectorString)
 
         if (element == null) {
@@ -163,6 +151,62 @@ actual object NativeBridge {
         return@staticCFunction elementId.toUInt()
     }
 
+    val nodeQuerySelectorHandler = staticCFunction { id: ULong, query: CPointer<ByteVar>?, len: ULong ->
+        val selectorString = query?.readBytes(len.toInt())?.decodeToString() ?: ""
+        println("[nodeQuerySelector] Selector: '$selectorString'")
+        println("[nodeQuerySelector] ID: $id")
+
+        val parent = elements[id.toInt()] ?: return@staticCFunction 0.toUInt()
+        val element = parent.selectFirst(selectorString)
+
+        if (element == null) {
+            println("[nodeQuerySelector] No match for '$selectorString'")
+            return@staticCFunction 0.toUInt()
+        }
+
+        println("[nodeQuerySelector] Found: ${element.text()}")
+
+        val elementId = nextId.getAndIncrement()
+        elements[elementId] = element
+        return@staticCFunction elementId.toUInt()
+    }
+
+    val querySelectorAllHandler: HostQuerySelectorAllFn = staticCFunction {
+            id: ULong,
+            query: CPointer<ByteVar>?,
+            len: ULong,
+            out_len: CPointer<UIntVar>?
+        ->
+        val selectorString = query?.readBytes(len.toInt())?.decodeToString() ?: ""
+
+        val doc = documents[id.toInt()]
+        val matchedElements = doc?.select(selectorString)
+
+        val results = matchedElements?.map { element ->
+            val elementId = nextId.getAndIncrement()
+            elements[elementId] = element
+            elementId
+        } ?: emptyList()
+
+        println("[querySelectorAll] Elements: $results")
+
+        val count = results.size
+
+        val arrayPtr = nativeHeap.allocArray<UIntVar>(count)
+
+        for (i in 0 until count) {
+            arrayPtr[i] = results[i].toUInt()
+        }
+
+        out_len?.pointed?.value = count.toUInt()
+
+        for (i in 0 until count) {
+            println(arrayPtr[i])
+        }
+
+        arrayPtr
+    }
+
     val nodeTextHandler: HostNodeTextFn = staticCFunction { id, out_len ->
         val element = elements[id.toInt()]
         val retString =  element?.text() ?: "Failed."
@@ -170,15 +214,38 @@ actual object NativeBridge {
 
         responseArena.clear()
         val responseBytes = retString.encodeToByteArray()
-        val cString = responseArena.allocArray<ByteVar>(responseBytes.size + 1)
+        val cString = nativeHeap.allocArray<ByteVar>(responseBytes.size + 1)
+
         for (i in responseBytes.indices) {
             cString[i] = responseBytes[i]
         }
-        cString[responseBytes.size] = 0.toByte() // Null terminator
+        cString[responseBytes.size] = 0.toByte()
 
-        // Set output length
         out_len?.pointed?.value = responseBytes.size.toUInt()
+        cString
+    }
 
+    val nodeAttrHandler: HostNodeAttrFn = staticCFunction {
+        id: ULong,
+        attr: CPointer<ByteVar>?,
+        len: ULong,
+        out_len: CPointer<UIntVar>?
+        ->
+        val attrString = attr?.readBytes(len.toInt())?.decodeToString() ?: ""
+        val element = elements[id.toInt()]
+        val retString = element?.attr(attrString) ?: "Failed."
+        println("[nodeText] Attr is $retString")
+
+        responseArena.clear()
+        val responseBytes = retString.encodeToByteArray()
+        val cString = nativeHeap.allocArray<ByteVar>(responseBytes.size + 1)
+
+        for (i in responseBytes.indices) {
+            cString[i] = responseBytes[i]
+        }
+        cString[responseBytes.size] = 0.toByte()
+
+        out_len?.pointed?.value = responseBytes.size.toUInt()
         cString
     }
 
@@ -248,7 +315,10 @@ actual object NativeBridge {
         relay_set_request_handler(requestHandler)
         relay_set_html_parse_handler(htmlParseHandler)
         relay_set_query_selector_handler(querySelectorHandler)
+        relay_set_query_selector_all_handler(querySelectorAllHandler)
+        relay_set_node_query_selector_handler(nodeQuerySelectorHandler)
         relay_set_node_text_handler(nodeTextHandler)
+        relay_set_node_attr_handler(nodeAttrHandler)
     }
 
     /**

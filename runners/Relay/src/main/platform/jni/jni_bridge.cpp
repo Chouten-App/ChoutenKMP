@@ -80,6 +80,32 @@ const char* host_request(const char *url, size_t len, int32_t method, uint32_t *
     return utf;
 }
 
+u32 host_html_parse(const char* html, size_t len) {
+    if (!gJvm || !gLoggerObj) return 0;
+
+    JNIEnv* env = nullptr;
+    if (gJvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION) != JNI_OK) {
+        return 0;
+    }
+
+    return 0;
+}
+
+u32 host_query_selector(size_t docId, const char* query, size_t len) {
+    if (!gJvm || !gLoggerObj) return 0;
+
+    JNIEnv* env = nullptr;
+    if (gJvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION) != JNI_OK) {
+        return 0;
+    }
+
+    return 0;
+}
+
+
+const char* host_node_text(size_t nodeId, uint32_t *pInt) {
+    return "";
+}
 
 // Keep a static module instance for now
 static Wasm3Module* wasmModule = nullptr;
@@ -114,8 +140,7 @@ extern "C" {
     // Call add function
     JNIEXPORT jint JNICALL
     Java_dev_chouten_runners_relay_NativeBridge_add(JNIEnv*, jobject, jint a, jint b) {
-        if (!wasmModule) return 0;
-        return wasmModule->add(a, b);
+        return 0;
     }
 
     JNIEXPORT jstring JNICALL
