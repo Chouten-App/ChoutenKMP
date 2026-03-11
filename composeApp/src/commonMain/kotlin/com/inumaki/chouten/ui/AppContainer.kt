@@ -67,7 +67,8 @@ fun AppContainer(
                 navigationState.fullscreenRoute?.let { route ->
                     FullscreenOverlay(
                         route = route,
-                        navScope = appConfig.navScope
+                        navScope = appConfig.navScope,
+                        devClientManager
                     )
                 }
             }

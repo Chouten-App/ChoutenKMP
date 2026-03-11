@@ -7,6 +7,9 @@ import com.inumaki.core.ui.model.DevClient
 import dev.chouten.core.repository.startDevClient
 import dev.chouten.runners.relay.NativeBridge
 import dev.chouten.runners.relay.RelayLogger
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -21,6 +24,10 @@ import kotlinx.coroutines.flow.map
  */
 class DevClientManager {
     private var devClient: DevClient? = null
+    private var wasmBytes: ByteArray = ByteArray(0)
+
+    private val _discoverResult = MutableStateFlow<String?>(null)
+    val discoverResult: StateFlow<String?> = _discoverResult.asStateFlow()
 
     /**
      * Initialize a connection to the dev client.
@@ -29,18 +36,23 @@ class DevClientManager {
      */
     fun initialize(cliIP: String) {
         devClient = startDevClient(cliIP) { wasm, client ->
-            println("📦 Binary frame received: ${wasm.size} bytes")
-            NativeBridge.load(wasm)
-            NativeBridge.initNativeBridge(NativeBridge)
+            wasmBytes = wasm
             RelayLogger.devClient = client
+            callDiscover()
+        }
+    }
 
-            try {
-                val result = NativeBridge.callMethod("discover_wrapper")
-                println("✅ WASM method call result: $result")
-            } catch (e: Exception) {
-                println("❌ NativeBridge error: ${e.message}")
-                e.printStackTrace()
-            }
+    fun callDiscover() {
+        NativeBridge.load(wasmBytes)
+        NativeBridge.initNativeBridge(NativeBridge)
+
+        try {
+            val result = NativeBridge.callMethod("discover_wrapper")
+            println("✅ WASM method call result: $result")
+            _discoverResult.value = result
+        } catch (e: Exception) {
+            println("❌ NativeBridge error: ${e.message}")
+            e.printStackTrace()
         }
     }
 
