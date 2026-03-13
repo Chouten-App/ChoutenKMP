@@ -65,10 +65,11 @@ fun PosterCard(data: PosterData, angle: Float) {
         ) {
             AsyncImage(
                 model = data.poster,
-                contentDescription = null,
+                contentDescription = data.titles.primary,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(AppTheme.layout.posterSize)
+                    .background(AppTheme.colors.container)
             )
             Text(
                 "~/~",
@@ -84,7 +85,7 @@ fun PosterCard(data: PosterData, angle: Float) {
         }
 
         Text(
-            data.title.primary,
+            data.titles.primary,
             style = AppTheme.typography.caption1,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,

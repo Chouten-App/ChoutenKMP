@@ -75,7 +75,7 @@ fun CarouselCard(data: PosterData, angle: Float) {
         ) {
             Column {
                 Text(
-                    data.title.secondary ?: "",
+                    data.titles.secondary ?: "",
                     style = AppTheme.typography.caption2,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
@@ -83,7 +83,7 @@ fun CarouselCard(data: PosterData, angle: Float) {
                 )
 
                 Text(
-                    data.title.primary,
+                    data.titles.primary,
                     style = AppTheme.typography.title2,
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,

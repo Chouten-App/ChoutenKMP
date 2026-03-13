@@ -35,7 +35,7 @@ fun DiscoverView(viewModel: DiscoverViewModel) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text("Error")
+                Text((state as DiscoverUiState.Error).message)
             }
         }
     }

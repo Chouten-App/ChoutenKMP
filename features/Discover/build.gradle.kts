@@ -3,6 +3,7 @@ plugins {
     id("com.android.library")
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 val os = System.getProperty("os.name")

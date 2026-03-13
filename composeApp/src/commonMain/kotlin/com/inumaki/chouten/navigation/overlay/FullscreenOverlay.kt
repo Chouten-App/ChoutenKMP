@@ -8,11 +8,16 @@ import com.inumaki.core.ui.model.DiscoverRoute
 import com.inumaki.core.ui.model.HomeRoute
 import com.inumaki.core.ui.model.NavigationScope
 import com.inumaki.core.ui.model.RepoRoute
+import com.inumaki.core.ui.model.Result
+import com.inumaki.core.ui.model.ResultSerializer
+import com.inumaki.core.ui.model.onOk
 import com.inumaki.features.discover.DiscoverView
 import com.inumaki.features.discover.DiscoverViewModel
 import com.inumaki.features.discover.model.DiscoverList
 import com.inumaki.features.home.HomeView
 import com.inumaki.features.repo.RepoView
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
 /**
@@ -36,13 +41,21 @@ fun FullscreenOverlay(
             }
 
             LaunchedEffect(Unit) {
-                devClientManager.discoverResult.collect { result ->
-                    result ?: return@collect
-                    try {
-                        val items = Json.decodeFromString<List<DiscoverList>>(result)
-                        viewModel.setDiscoverData(items)
-                    } catch (e: Exception) {
-                        viewModel.setError(e.message ?: "Parse error")
+                devClientManager.discoverResult.collect { json ->
+                    if (json.isNullOrEmpty()) {
+                        viewModel.setLoading()
+                        return@collect
+                    }
+                    val serializer = ResultSerializer(
+                        ListSerializer(DiscoverList.serializer()),
+                        String.serializer()
+                    )
+
+                    val result: Result<List<DiscoverList>, String> = Json.decodeFromString(serializer, json)
+
+                    when (result) {
+                        is Result.Ok -> viewModel.setDiscoverData(result.value)
+                        is Result.Err -> viewModel.setError(result.error)
                     }
                 }
             }
