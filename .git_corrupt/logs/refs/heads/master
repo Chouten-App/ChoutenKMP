@@ -1,0 +1,32 @@
+0000000000000000000000000000000000000000 b481ba4650fa2ade1f287fdcba81236c64eadcb7 inumakieu <kempcompany05@gmail.com> 1769267193 +0100	commit (initial): Setup app structure
+b481ba4650fa2ade1f287fdcba81236c64eadcb7 80278ecd87b1ecd8a4c6bc82c17de216f8ab6f16 inumakieu <kempcompany05@gmail.com> 1769343020 +0100	commit: Fix builds for macos and images not loading
+80278ecd87b1ecd8a4c6bc82c17de216f8ab6f16 71c2c84080b6db09b3d6fe10734e4f24cd804d4a inumakieu <kempcompany05@gmail.com> 1769343111 +0100	commit: Fix unused import breaking compilation
+71c2c84080b6db09b3d6fe10734e4f24cd804d4a e5dcd208dc3dc3c9ddfde6550c9852a86a83b693 inumakieu <kempcompany05@gmail.com> 1769343471 +0100	commit: Fix missing dependency in core
+e5dcd208dc3dc3c9ddfde6550c9852a86a83b693 8e5ad12eac50e30f5eb299e5ede0ce58431a7d0a inumakieu <kempcompany05@gmail.com> 1769343956 +0100	commit: Fix missing dependency in core
+8e5ad12eac50e30f5eb299e5ede0ce58431a7d0a afdd97b961f3b3603516a6af887976f3e83b2e0b inumakieu <kempcompany05@gmail.com> 1769378935 +0100	commit: Fix visual bugs and start implementing Responsive layout
+afdd97b961f3b3603516a6af887976f3e83b2e0b dfd4bae42498d1e5e5678a91deb8312270dc108f inumakieu <kempcompany05@gmail.com> 1769431146 +0100	commit: Continue responsive UI and fix GyroProvider missing on ios
+dfd4bae42498d1e5e5678a91deb8312270dc108f 5489c11ac80965d8d7e0519bef2d57e7af0a3cb0 inumakieu <kempcompany05@gmail.com> 1769431304 +0100	commit: Add Gyro logic to ios
+5489c11ac80965d8d7e0519bef2d57e7af0a3cb0 0bfb8de8a0b827f4920f808ee7b54d41205000f8 inumakieu <kempcompany05@gmail.com> 1769433314 +0100	commit: fix Gyro logic to ios
+0bfb8de8a0b827f4920f808ee7b54d41205000f8 6e758cc4ea8f868812c629b56a24cb66cd312b00 inumakieu <kempcompany05@gmail.com> 1769433572 +0100	commit: fix Gyro logic to ios
+6e758cc4ea8f868812c629b56a24cb66cd312b00 0b5e374626b4a45c18c5829cf6c2e3a2653c24dc inumakieu <kempcompany05@gmail.com> 1769434185 +0100	commit: make ios gyro use remember
+0b5e374626b4a45c18c5829cf6c2e3a2653c24dc 96cdceb1bf26dda7a1e0bc67d6a2ad63d3cbdba7 inumakieu <kempcompany05@gmail.com> 1769434327 +0100	commit: make ios gyro use remember
+96cdceb1bf26dda7a1e0bc67d6a2ad63d3cbdba7 91ecfb02368da95d51982e4f75b04188e058823d inumakieu <kempcompany05@gmail.com> 1769436491 +0100	commit: Respect Safe Area Top Padding
+91ecfb02368da95d51982e4f75b04188e058823d d9666029eaebefdea8164be2254dcf4a9e461743 inumakieu <kempcompany05@gmail.com> 1769509583 +0100	commit: Make whole app use Theme Colors
+d9666029eaebefdea8164be2254dcf4a9e461743 fd46ced04c26043a6b5bc041f5a7a3c19b5e51a1 inumakieu <kempcompany05@gmail.com> 1769522898 +0100	commit: Implement Basic Settings View setup
+fd46ced04c26043a6b5bc041f5a7a3c19b5e51a1 a93d53ec5c8c171d3089a5222ad30c0a5d62cc69 inumakieu <kempcompany05@gmail.com> 1769637315 +0100	commit: Add Settings View animation and DataStore setup
+a93d53ec5c8c171d3089a5222ad30c0a5d62cc69 a19f8b1f929a0a86fa52c7a29ae234904318a28f inumakieu <kempcompany05@gmail.com> 1769688868 +0100	commit: First wasm test implementedw
+a19f8b1f929a0a86fa52c7a29ae234904318a28f 561ea712a1490f5df6211ccd7dfc2af61565a1c0 inumakieu <kempcompany05@gmail.com> 1769693678 +0100	merge origin/master: Fast-forward
+561ea712a1490f5df6211ccd7dfc2af61565a1c0 20b733b52ef4b8a9da188d677938c6411f61f06e inumakieu <kempcompany05@gmail.com> 1769695418 +0100	commit: Refactor cpp code, and almost finish cinterop setup
+20b733b52ef4b8a9da188d677938c6411f61f06e c7a6569a7e76cda55a178351468cce0faef5afc0 inumakieu <kempcompany05@gmail.com> 1770727193 +0100	commit: Start implementing Host functions (not working right now)
+c7a6569a7e76cda55a178351468cce0faef5afc0 6881533d470442450e0991e81e20374ec8ef623a inumakieu <kempcompany05@gmail.com> 1770727243 +0100	commit: Start implementing Host functions (not working right now) MERGED
+6881533d470442450e0991e81e20374ec8ef623a 8d47cdbcd43672046fb829b885494785d8f69630 inumakieu <kempcompany05@gmail.com> 1770727280 +0100	commit (merge): Merge remote-tracking branch 'origin/master'
+8d47cdbcd43672046fb829b885494785d8f69630 3f3d6776b0291a16167a5ebf2f912942a7ade5fa inumakieu <kempcompany05@gmail.com> 1770983883 +0100	commit: Fixed dev client connection not working on Android and iOS.
+3f3d6776b0291a16167a5ebf2f912942a7ade5fa 5c0ce72f9ac38bd399f0ec374010c72962f0ad9e inumakieu <kempcompany05@gmail.com> 1770984315 +0100	commit: Fix visual bug on discover view
+5c0ce72f9ac38bd399f0ec374010c72962f0ad9e d589ef648ca945018016b53103d95140fcef2a10 inumakieu <kempcompany05@gmail.com> 1770989484 +0100	commit: Add logging to the cli
+d589ef648ca945018016b53103d95140fcef2a10 c68464658efca5654a52e95835fbf38513e91da1 inumakieu <kempcompany05@gmail.com> 1772114018 +0100	merge origin/master: Fast-forward
+c68464658efca5654a52e95835fbf38513e91da1 b92f63356d2847434c2887628a1366655403e81d inumakieu <kempcompany05@gmail.com> 1772117611 +0100	commit: Fix request function crashing the app
+b92f63356d2847434c2887628a1366655403e81d 2cbb0775cdd54c3809d104ab663250eee24cd062 inumakieu <kempcompany05@gmail.com> 1772119331 +0100	commit: Make request function use actual data class
+2cbb0775cdd54c3809d104ab663250eee24cd062 ec2f6b52cc755a38d0dff194a5fbe0ff5eb7330a inumakieu <kempcompany05@gmail.com> 1772186506 +0100	commit: Request function about to return a json string response
+ec2f6b52cc755a38d0dff194a5fbe0ff5eb7330a 53795f876850c32919308cb77340097b453154ec inumakieu <kempcompany05@gmail.com> 1773666680 +0100	pull: Fast-forward
+53795f876850c32919308cb77340097b453154ec 76731dc7654c067d7fe8f59f0b0ba8a894df8b37 inumakieu <kempcompany05@gmail.com> 1773924955 +0100	commit: Fix error state on discover crashing the app
+76731dc7654c067d7fe8f59f0b0ba8a894df8b37 f3441f7d8af6ef13ed4572356f3aab5e5f583b58 inumakieu <kempcompany05@gmail.com> 1774257366 +0100	commit: WASM refactor

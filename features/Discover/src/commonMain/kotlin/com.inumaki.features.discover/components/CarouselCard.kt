@@ -1,0 +1,119 @@
+package com.inumaki.features.discover.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import com.inumaki.core.ui.components.AppImage
+import com.inumaki.core.ui.components.ConcentricShape
+import com.inumaki.core.ui.modifiers.shiningBorder
+import com.inumaki.core.ui.model.PosterData
+import com.inumaki.core.ui.theme.AppTheme
+
+@Composable
+fun CarouselCard(data: PosterData, angle: Float) {
+    Box(
+        modifier = Modifier
+            .padding(24.dp)
+            .widthIn(max = 460.dp)
+            .fillMaxWidth()
+            //.shiningBorder(angle, 34.dp)
+            .clip(ConcentricShape(34.dp))
+            .background(AppTheme.colors.container),
+        contentAlignment = Alignment.TopEnd
+    ) {
+        AsyncImage(
+            model = data.poster,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(0.65f)
+        )
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            AppTheme.colors.container.copy(0f),
+                            AppTheme.colors.container
+                        ),
+                    )
+                )
+        )
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column {
+                Text(
+                    data.titles.secondary ?: "",
+                    style = AppTheme.typography.caption2,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    modifier = Modifier.alpha(0.7f)
+                )
+
+                Text(
+                    data.titles.primary,
+                    style = AppTheme.typography.title2,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                )
+            }
+
+            Text(
+                data.description ?: "",
+                style = AppTheme.typography.caption1,
+                maxLines = 3,
+                fontWeight = FontWeight.Medium,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.alpha(0.7f)
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+                .shiningBorder(angle, 50.dp)
+                .clip(RoundedCornerShape(50))
+                .background(AppTheme.colors.container)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text("1/10", fontSize = 12.sp)
+
+            AppImage("drawable/tv-solid-full.svg", modifier = Modifier.width(14.dp))
+        }
+    }
+}
