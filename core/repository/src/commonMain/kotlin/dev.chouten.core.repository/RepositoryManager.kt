@@ -1,80 +1,107 @@
 package dev.chouten.core.repository
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 
-data class RepositoryDetails(
-    val id: String,
-    val name: String,
-    val description: String?,
-    val baseUrl: String,
-    val modules: List<ModuleDetails>,
-    val freshnessPolicy: FreshnessPolicy,
-    val lastFetched: Long
-)
+class RepositoryManager(
+    private val storage: RepositoryStorage,
+    private val remote: RepositoryRemote
+) {
+    suspend fun addRepository(url: String) {
+        val repo = remote.fetchRepository(url)
+        val current = storage.getRepositories()
+        storage.saveRepositories(current + repo)
+    }
 
-sealed class FreshnessPolicy {
-    data class Timed(val intervalMs: Long) : FreshnessPolicy()
-    object AlwaysFresh : FreshnessPolicy()        // dev repo
-    object ManualOnly : FreshnessPolicy()         // future signed repo
-}
+    suspend fun removeRepository(url: String) {
+        val updated = storage.getRepositories().filterNot { it.url == url }
+        storage.saveRepositories(updated)
+    }
 
-data class ModuleDetails(
-    val id: String,
-    val name: String,
-    val description: String?,
-    val version: String,
-)
+    suspend fun refreshRepositories() {
+        val repos = storage.getRepositories()
 
-object RepositoryManager {
-    var repos: List<RepositoryDetails> = emptyList()
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val updated = repos.map { repo ->
+            remote.fetchRepository(repo.url)
+                .copy(lastUpdated = currentTimeMillis())
+        }
+        storage.saveRepositories(updated)
+    }
 
-    fun startPolling() {
-        scope.launch {
-            while (isActive) {
-                refreshRepositories()
-                delay(5_000) // base tick
-            }
+
+    suspend fun installModule(moduleId: String) {
+        val repos = storage.getRepositories()
+
+        val module = repos
+            .flatMap { it.modules }
+            .first { it.id == moduleId }
+
+        val wasm = remote.downloadModule(module.wasmUrl)
+
+        val path = saveToDisk(module.id, module.version, wasm)
+
+        val installed = storage.getInstalledModules()
+
+        storage.saveInstalledModules(
+            installed + InstalledModule(
+                id = module.id,
+                version = module.version,
+                localPath = path,
+                sourceRepo = findRepoOf(moduleId, repos)
+            )
+        )
+    }
+
+    suspend fun removeModule(moduleId: String) {
+        val installed = storage.getInstalledModules()
+        val target = installed.first { it.id == moduleId }
+
+        deleteFromDisk(target.localPath)
+
+        storage.saveInstalledModules(
+            installed.filterNot { it.id == moduleId }
+        )
+    }
+
+    suspend fun getUpdatableModules(): List<Pair<InstalledModule, RemoteModule>> {
+        val installed = storage.getInstalledModules()
+        val repos = storage.getRepositories()
+
+        val remoteMap = repos.flatMap { it.modules }
+            .associateBy { it.id }
+
+        return installed.mapNotNull { local ->
+            val remote = remoteMap[local.id] ?: return@mapNotNull null
+
+            if (remote.version != local.version) {
+                local to remote
+            } else null
         }
     }
 
-    fun getDetails(id: String): RepositoryDetails? {
-        return repos.firstOrNull { it.id == id }
-    }
-
-    fun fetchDetails(url: String, force: Boolean = false): RepositoryDetails? {
-        return null
-    }
-
-    fun refreshRepositories() {
-        val now = currentTimeMillis()
-
-        repos.forEach { repo ->
-            when (val policy = repo.freshnessPolicy) {
-
-                is FreshnessPolicy.AlwaysFresh -> {
-                    fetchDetails(repo.baseUrl, force = true)
-                }
-
-                is FreshnessPolicy.Timed -> {
-                    if (now - repo.lastFetched >= policy.intervalMs) {
-                        fetchDetails(repo.baseUrl)
-                    }
-                }
-
-                FreshnessPolicy.ManualOnly -> Unit
-            }
-        }
+    suspend fun updateModule(moduleId: String) {
+        removeModule(moduleId)
+        installModule(moduleId)
     }
 
 
-    fun addRepo(url: String) {
-
+    /// Helper functions
+    val base = ""
+    fun findRepoOf(moduleId: String, repos: List<Repository>): String {
+        return repos.firstOrNull { repo ->
+            repo.modules.any { it.id == moduleId }
+        }?.url ?: error("Module not found")
     }
-    fun removeRepo(id: String) {}
+
+    suspend fun saveToDisk(moduleId: String, version: String, bytes: ByteArray): String {
+        val dir = "$base/modules/${moduleId}/$version/"
+        val final = "$dir/artifact"
+
+        FileStore.createDirectories(dir)
+        FileStore.write(final, bytes)
+
+        return final
+    }
+
+    suspend fun deleteFromDisk(path: String) {
+        FileStore.delete(path)
+    }
 }

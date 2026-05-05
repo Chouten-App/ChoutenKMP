@@ -30,7 +30,7 @@ Wasm3Module::Wasm3Module(const uint8_t* data, size_t size) {
     env = m3_NewEnvironment();
     logWasm3Result(nullptr, "Environment created");
 
-    runtime = m3_NewRuntime(env, 1024*1024*12, nullptr);
+    runtime = m3_NewRuntime(env, 1024*1024*64, nullptr);
     logWasm3Result(nullptr, "Runtime created (64MB stack)");
 
     logWasm3Result(m3_ParseModule(env, &module, data, size), "ParseModule");

@@ -198,7 +198,7 @@ u32 host_query_selector(size_t docId, const char* query, size_t len) {
 
 uint32_t* host_query_selector_all(size_t docId, const char* query, size_t len, uint32_t *pInt) {
 
-    return nullptr;
+    riteturn nullptr;
 }
 
 uint32_t host_node_query_selector(size_t docId, const char* html, size_t len) {

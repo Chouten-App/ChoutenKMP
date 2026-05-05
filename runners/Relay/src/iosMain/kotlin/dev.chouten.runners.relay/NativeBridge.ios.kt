@@ -5,10 +5,12 @@ package dev.chouten.runners.relay
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
 import com.fleeksoft.ksoup.nodes.Element
+import com.inumaki.core.ui.model.HostEnvironment
+import com.inumaki.core.ui.model.HttpMethod
 import dev.chouten.core.repository.httpClient
+import dev.chouten.runners.relay.NativeBridge.hostEnvironment
 import io.ktor.client.request.request
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpMethod
 import kotlinx.cinterop.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -74,7 +76,7 @@ actual object NativeBridge {
             out_len: CPointer<UIntVar>?
         ->
         val urlString = url?.readBytes(len.toInt())?.decodeToString() ?: ""
-        val response = request(urlString, method)
+        val response = hostEnvironment.request(urlString, HttpMethod.fromInt(method))
 
         val responseBytes = response.encodeToByteArray()
 
@@ -91,13 +93,14 @@ actual object NativeBridge {
 
     val htmlParseHandler = staticCFunction { html: CPointer<ByteVar>?, len: ULong ->
         val rawHtml = html?.readBytes(len.toInt())?.decodeToString() ?: ""
-        return@staticCFunction NativeContext.html_parse(rawHtml).toUInt()
+        println("[parse]")
+        return@staticCFunction hostEnvironment.htmlParse(rawHtml).toUInt()
     }
 
     val querySelectorHandler = staticCFunction { id: ULong, query: CPointer<ByteVar>?, len: ULong ->
         val selectorString = query?.readBytes(len.toInt())?.decodeToString() ?: ""
 
-        val id = NativeContext.html_query_selector(id.toInt(), selectorString)
+        val id = hostEnvironment.querySelector(id.toInt(), selectorString)
         if (id == -1) {
             println("[querySelector] No element found.")
             return@staticCFunction 0.toUInt()
@@ -109,7 +112,7 @@ actual object NativeBridge {
     val nodeQuerySelectorHandler = staticCFunction { id: ULong, query: CPointer<ByteVar>?, len: ULong ->
         val selectorString = query?.readBytes(len.toInt())?.decodeToString() ?: ""
 
-        val id = NativeContext.node_query_selector(id.toInt(), selectorString)
+        val id = hostEnvironment.nodeQuerySelector(id.toInt(), selectorString)
         if (id == -1) {
             println("[nodeQuerySelector] No element found.")
             return@staticCFunction 0.toUInt()
@@ -124,9 +127,12 @@ actual object NativeBridge {
             len: ULong,
             out_len: CPointer<UIntVar>?
         ->
+        println("[querySelectorAll] Started.")
         val selectorString = query?.readBytes(len.toInt())?.decodeToString() ?: ""
+        println("[querySelectorAll] $selectorString")
 
-        val results = NativeContext.html_query_selector_all(id.toInt(), selectorString)
+        val results = hostEnvironment.querySelectorAll(id.toInt(), selectorString)
+        println("[querySelectorAll] $results")
 
         val count = results.size
 
@@ -134,19 +140,16 @@ actual object NativeBridge {
 
         for (i in 0 until count) {
             arrayPtr[i] = results[i].toUInt()
+            println(arrayPtr[i])
         }
 
         out_len?.pointed?.value = count.toUInt()
-
-        for (i in 0 until count) {
-            println(arrayPtr[i])
-        }
 
         arrayPtr
     }
 
     val nodeTextHandler: HostNodeTextFn = staticCFunction { id, out_len ->
-        val retString = NativeContext.node_text(id.toInt())
+        val retString = hostEnvironment.nodeText(id.toInt())
 
         responseArena.clear()
         val responseBytes = retString.encodeToByteArray()
@@ -168,7 +171,7 @@ actual object NativeBridge {
         out_len: CPointer<UIntVar>?
         ->
         val attrString = attr?.readBytes(len.toInt())?.decodeToString() ?: ""
-        val retString = NativeContext.node_attr(id.toInt(), attrString)
+        val retString = hostEnvironment.nodeAttr(id.toInt(), attrString)
 
         responseArena.clear()
         val responseBytes = retString.encodeToByteArray()
@@ -181,10 +184,6 @@ actual object NativeBridge {
 
         out_len?.pointed?.value = responseBytes.size.toUInt()
         cString
-    }
-
-    actual fun request(url: String, method: Int): String {
-        NativeContext.request(url, method)
     }
 
     actual fun callMethod(name: String): String {
@@ -207,7 +206,11 @@ actual object NativeBridge {
         relay_set_request_handler(null)
         relay_set_html_parse_handler(null)
         relay_set_query_selector_handler(null)
+        relay_set_query_selector_all_handler(null)
+        relay_set_node_query_selector_handler(null)
         relay_set_node_text_handler(null)
+        relay_set_node_attr_handler(null)
+        relay_set_logger(null)
 
         modulePtr?.let {
             relay_destroy_module(it)
@@ -228,6 +231,13 @@ actual object NativeBridge {
         relay_set_node_query_selector_handler(nodeQuerySelectorHandler)
         relay_set_node_text_handler(nodeTextHandler)
         relay_set_node_attr_handler(nodeAttrHandler)
+
+        relay_set_logger(staticCFunction { msg, len ->
+            msg?.let {
+                val message = it.readBytes(len.toInt()).decodeToString()
+                RelayLogger.log(message)
+            }
+        })
     }
 
     /**
@@ -249,13 +259,11 @@ actual object NativeBridge {
      * because C can only call static functions, not Kotlin object methods directly.
      */
     actual fun initLogger(logger: Any) {
-        relay_set_logger(staticCFunction { msg, len ->
-            msg?.let {
-                val message = it.readBytes(len.toInt()).decodeToString()
-                RelayLogger.log(message)
-            }
-        })
+
     }
 
-    actual fun initNativeBridge(nativeBridge: NativeBridge) {}
+    actual fun initHostEnvironment(host: HostEnvironment) {
+        hostEnvironment = host
+    }
+    lateinit var hostEnvironment: HostEnvironment
 }

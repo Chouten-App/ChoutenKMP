@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
@@ -17,8 +19,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.inumaki.core.ui.MatchedTransitionScope
 import com.inumaki.core.ui.components.SharedElementController
 import com.inumaki.core.ui.components.SharedElementOverlay
+import com.inumaki.core.ui.components.alert.AlertManager
+import com.inumaki.core.ui.model.ToolbarAction
 
 // Define color scheme
 data class AppColors(
@@ -28,7 +33,8 @@ data class AppColors(
     val border: Color,
     val fg: Color,
     val accent: Color,
-    val accentBorder: Color
+    val accentBorder: Color,
+    val error: Color
 )
 
 val LightAppColors = AppColors(
@@ -38,7 +44,8 @@ val LightAppColors = AppColors(
     border = Color(0xFFE0E0E0),
     fg = Color(0xFF757575),
     accent = Color(0xFF6458ED),
-    accentBorder = Color(0xFF9291FF)
+    accentBorder = Color(0xFF9291FF),
+    error = Color(0xFFFF383C)
 )
 
 val DarkAppColors = AppColors(
@@ -48,7 +55,8 @@ val DarkAppColors = AppColors(
     border = Color(0xFF3B3B3B),
     fg = Color(0xFFD4D4D4),
     accent = Color(0xFF5E5CE6),
-    accentBorder = Color(0xFF9291FF)
+    accentBorder = Color(0xFF9291FF),
+    error = Color(0xFFFF4245)
 )
 
 // Define typography
@@ -171,12 +179,12 @@ private fun compactLayout(): AppLayout {
 
 private fun phoneLayout(): AppLayout {
     return AppLayout(
-        contentPadding = PaddingValues(horizontal = 24.dp),
-        screenEdgePadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp, top = 20.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        screenEdgePadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 20.dp, top = 20.dp),
         posterSize = DpSize(90.dp, 128.dp),
         iconSize = DpSize(44.dp, 44.dp),
         forceHideLabels = false,
-        bottomBarItemSize = DpSize(68.dp, 48.dp),
+        bottomBarItemSize = DpSize(58.dp, 48.dp),
         bottomBarLocation = Alignment.BottomCenter
     )
 }
@@ -200,6 +208,17 @@ val LocalChoutenTypography = staticCompositionLocalOf { DefaultTypography }
 val LocalChoutenShapes = staticCompositionLocalOf { DefaultShapes }
 val LocalChoutenLayout = staticCompositionLocalOf { compactLayout() }
 val LocalSharedController = staticCompositionLocalOf { SharedElementController() }
+val LocalMatchedTransitionScope = staticCompositionLocalOf<MatchedTransitionScope> {
+    error("No MatchedTransitionScope provided")
+}
+
+typealias ToolbarItem = @Composable () -> Unit
+
+val LocalToolbarItems = compositionLocalOf<MutableList<ToolbarItem>> {
+    error("No toolbar items provided")
+}
+
+val LocalAlertManager = staticCompositionLocalOf { AlertManager() }
 
 // ChoutenTheme provider function
 @Composable
@@ -208,6 +227,7 @@ fun AppTheme(
     typography: AppTypography = DefaultTypography,
     shapes: AppShapes = DefaultShapes,
     controller: SharedElementController = SharedElementController(),
+    items: MutableList<ToolbarItem> = mutableStateListOf<ToolbarItem>(),
     content: @Composable () -> Unit
 ) {
     BoxWithConstraints {
@@ -218,7 +238,8 @@ fun AppTheme(
             LocalChoutenTypography provides typography,
             LocalChoutenShapes provides shapes,
             LocalChoutenLayout provides layout,
-            LocalSharedController provides controller
+            LocalSharedController provides controller,
+            LocalToolbarItems provides items
         ) {
             content()
         }
@@ -241,4 +262,8 @@ object AppTheme {
 
     val controller: SharedElementController
         @Composable get() = LocalSharedController.current
+
+    val items: MutableList<ToolbarItem>
+        @Composable get() = LocalToolbarItems.current
+
 }

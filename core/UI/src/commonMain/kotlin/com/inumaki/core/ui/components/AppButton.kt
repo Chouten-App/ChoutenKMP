@@ -32,9 +32,6 @@ fun AppButton(iconPath: String, angle: Float, modifier: Modifier = Modifier, bac
             .shiningBorder(angle, AppTheme.layout.iconSize.width / 2, background)
             .clip(RoundedCornerShape(50))
             .background(background)
-            .clickable {
-                onClick()
-            },
     ) {
         AsyncImage(
             Res.getUri(iconPath),

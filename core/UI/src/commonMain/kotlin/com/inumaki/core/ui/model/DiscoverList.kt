@@ -1,6 +1,5 @@
-package com.inumaki.features.discover.model
+package com.inumaki.core.ui.model
 
-import com.inumaki.core.ui.model.PosterData
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -27,7 +27,7 @@ import com.inumaki.core.ui.components.PosterCard
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.theme.AppTheme
 import com.inumaki.features.discover.components.CarouselCard
-import com.inumaki.features.discover.model.DiscoverList
+import com.inumaki.core.ui.model.DiscoverList
 
 @Composable
 fun DiscoverViewSuccess(items: List<DiscoverList>, angle: Float) {
@@ -40,52 +40,69 @@ fun DiscoverViewSuccess(items: List<DiscoverList>, angle: Float) {
         LazyColumn(
             contentPadding = PaddingValues(top = 92.dp, bottom = 100.dp),
         ) {
-            item {
-                CarouselCard(items[0].list[0], angle)
-            }
-            items(items.drop(1)) { list ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        list.title,
-                        style = AppTheme.typography.title3,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(AppTheme.layout.contentPadding)
-                    )
+            items.forEach { item ->
+                when (item.section_type) {
+                    "CAROUSEL" -> {
+                        item {
+                            CarouselCard(item.list[0], angle)
+                        }
+                    }
 
-                    Row(
-                        modifier = Modifier
-                            .padding(end = 24.dp)
-                            .shiningBorder(angle, 50.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(AppTheme.colors.container)
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text("more", fontSize = 12.sp)
+                    "LIST" -> {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    item.title,
+                                    style = AppTheme.typography.title3,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .padding(AppTheme.layout.contentPadding)
+                                )
 
-                        AppImage("drawable/chevron-right-solid-full.svg", modifier = Modifier.width(14.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .padding(end = 24.dp)
+                                        .shiningBorder(angle, 50.dp)
+                                        .clip(RoundedCornerShape(50))
+                                        .background(AppTheme.colors.container)
+                                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text("more", fontSize = 12.sp)
+
+                                    AppImage("drawable/chevron-right-solid-full.svg", modifier = Modifier.width(14.dp))
+                                }
+                            }
+                            LazyRow(
+                                modifier = Modifier
+                                    .padding(bottom = 20.dp)
+                                    .fillMaxWidth(),
+                                contentPadding = AppTheme.layout.contentPadding,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(item.list) { item ->
+                                    PosterCard(item, angle)
+                                }
+                            }
+                        }
+                    }
+
+                    "GRID" -> {
+                        item {
+                            Text("TODO!", modifier = Modifier.padding(top = 80.dp))
+                        }
                     }
                 }
-                LazyRow(
-                    modifier = Modifier
-                        .padding(bottom = 20.dp)
-                        .fillMaxWidth(),
-                    contentPadding = AppTheme.layout.contentPadding,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(list.list) { item ->
-                        PosterCard(item, angle)
-                    }
-                }
             }
+
+
         }
     }
 }

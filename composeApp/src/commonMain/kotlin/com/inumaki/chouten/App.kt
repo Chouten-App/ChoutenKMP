@@ -3,6 +3,7 @@ package com.inumaki.chouten
 import androidx.compose.runtime.Composable
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import com.inumaki.chouten.common.ensureAppFolder
 import com.inumaki.chouten.ui.AppRoot
 
 /**
@@ -14,6 +15,8 @@ fun App(
     headingSource: HeadingSource,
     dataStore: DataStore<Preferences>
 ) {
+    ensureAppFolder()
+
     AppRoot(
         headingSource = headingSource,
         dataStore = dataStore

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -49,16 +50,20 @@ import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.inumaki.core.ui.components.AppButton
+import com.inumaki.core.ui.components.AppImage
 import com.inumaki.core.ui.components.AppTintedButton
 import com.inumaki.core.ui.components.AppToggle
 import com.inumaki.core.ui.components.LiquidToggle
 import com.inumaki.core.ui.model.AppConfig
+import com.inumaki.core.ui.modifiers.reportScrollGate
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.theme.AppTheme
 import com.kyant.backdrop.backdrops.layerBackdrop
@@ -72,6 +77,8 @@ import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun SettingsView(viewModel: SettingsViewModel, appConfig: AppConfig, modifier: Modifier = Modifier) {
+    val listState = rememberLazyListState()
+
     val useBlur by viewModel.useBlur.collectAsState()
     val useLiquidGlass by viewModel.useLiquidGlass.collectAsState()
     val cliIP by viewModel.cliIP.collectAsState()
@@ -106,12 +113,38 @@ fun SettingsView(viewModel: SettingsViewModel, appConfig: AppConfig, modifier: M
             .background(AppTheme.colors.container)
     ) {
         LazyColumn(
+            state = listState,
             modifier = Modifier
+                .reportScrollGate(listState)
                 .fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 90.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Sections
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(AppTheme.colors.overlay)
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AsyncImage(
+                        "https://i.pinimg.com/1200x/7b/1d/dc/7b1ddcab5e7fccfb8a00ca680f4a24c3.jpg",
+                        contentDescription = "pfp",
+                        modifier = Modifier
+                            .width(52.dp)
+                            .clip(CircleShape)
+                    )
+
+                    Column {
+                        Text("Inumaki", style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = AppTheme.colors.fg))
+                        Text("Developer", style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, color = AppTheme.colors.fg.copy(0.7f)))
+                    }
+                }
+            }
+
             item {
                 Text(
                     "General",
@@ -122,7 +155,6 @@ fun SettingsView(viewModel: SettingsViewModel, appConfig: AppConfig, modifier: M
                     Box(
                         modifier = Modifier
                             .matchParentSize()
-                            .shiningBorder(0f, 20.dp)
                             .clip(RoundedCornerShape(20.dp))
                             .background(AppTheme.colors.overlay)
                     )
@@ -131,21 +163,7 @@ fun SettingsView(viewModel: SettingsViewModel, appConfig: AppConfig, modifier: M
                             .fillMaxWidth()
                             .padding(12.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "Use Progressive Blur",
-                                style = AppTheme.typography.subheadline,
-                                fontWeight = FontWeight.Medium
-                            )
-
-                            AppToggle(useBlur ?: false, onChange = { newValue ->
-                                viewModel.setUseBlur(newValue)
-                            }, backdrop, isLiquid = useLiquidGlass ?: false)
-                        }
+                        SettingsLink("drawable/safari-solid-full.svg", "Appearance")
 
                         HorizontalDivider(
                             thickness = 1.dp,
@@ -153,26 +171,51 @@ fun SettingsView(viewModel: SettingsViewModel, appConfig: AppConfig, modifier: M
                             modifier = Modifier.padding(vertical = 12.dp)
                         )
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth().alpha(0.5f),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "Use Liquid Glass",
-                                style = AppTheme.typography.subheadline,
-                                fontWeight = FontWeight.Medium
-                            )
+                        SettingsLink("drawable/safari-solid-full.svg", "Library")
 
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = AppTheme.colors.border,
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        )
 
-                            AppToggle(false, onChange = { newValue ->
-                                // viewModel.setUseLiquidGlass(newValue)
-                            }, backdrop, isLiquid = useLiquidGlass ?: false)
-                        }
+                        SettingsLink("drawable/safari-solid-full.svg", "Reader")
                     }
                 }
             }
 
+            item {
+                Text(
+                    "Advanced",
+                    style = AppTheme.typography.caption1,
+                    modifier = Modifier.padding(start = 20.dp, bottom = 2.dp)
+                )
+                Box {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(AppTheme.colors.overlay)
+                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    ) {
+                        SettingsLink("drawable/safari-solid-full.svg", "Repositories")
+
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = AppTheme.colors.border,
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        )
+
+                        SettingsLink("drawable/safari-solid-full.svg", "Developer")
+                    }
+                }
+            }
+
+            /*
             item {
                 Text(
                     "Debug",
@@ -239,8 +282,10 @@ fun SettingsView(viewModel: SettingsViewModel, appConfig: AppConfig, modifier: M
                     modifier = Modifier.fillMaxWidth().height(2000.dp)
                 )
             }
+             */
         }
 
+        /*
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -273,5 +318,43 @@ fun SettingsView(viewModel: SettingsViewModel, appConfig: AppConfig, modifier: M
                 }
             )
         }
+
+         */
+    }
+}
+
+@Composable
+fun SettingsLink(icon: String, title: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AppImage(
+                icon,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(AppTheme.colors.border)
+                    .padding(4.dp)
+                    .width(20.dp)
+            )
+
+            Text(
+                title,
+                style = AppTheme.typography.subheadline,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        AppImage(
+            "drawable/chevron-right-solid-full.svg",
+            modifier = Modifier
+                .width(20.dp),
+            color = AppTheme.colors.border
+        )
     }
 }

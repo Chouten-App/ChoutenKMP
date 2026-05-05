@@ -1,6 +1,6 @@
 package dev.chouten.core.repository
 
-import com.inumaki.core.ui.model.DevClient
+import dev.chouten.core.repository.DevClient
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*

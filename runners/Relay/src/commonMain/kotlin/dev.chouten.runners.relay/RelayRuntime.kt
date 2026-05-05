@@ -1,5 +1,63 @@
 package dev.chouten.runners.relay
 
+import com.inumaki.core.ui.model.ChoutenError
+import com.inumaki.core.ui.model.ChoutenErrorSerializer
+import com.inumaki.core.ui.model.DiscoverList
+import com.inumaki.core.ui.model.HostEnvironment
+import com.inumaki.core.ui.model.PosterData
+import com.inumaki.core.ui.model.Result
+import com.inumaki.core.ui.model.ResultSerializer
+import com.inumaki.core.ui.model.Runtime
+import com.inumaki.core.ui.model.SourceModule
+import io.ktor.http.ContentType.Application.Json
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
+
+class RelayRuntime: Runtime {
+    override suspend fun load(module: SourceModule) {
+        module.binary?.let { wasmBinary ->
+            NativeBridge.load(wasmBinary)
+        }
+    }
+
+    override suspend fun initialize(host: HostEnvironment?) {
+        host?.let {
+            NativeBridge.initHostEnvironment(host)
+        }
+    }
+
+    override fun discover(): List<DiscoverList> {
+        val json = NativeBridge.callMethod("discover_impl")
+
+        if (json.isEmpty()) {
+            return emptyList()
+        }
+        val serializer = ResultSerializer(
+            ListSerializer(DiscoverList.serializer()),
+            ChoutenErrorSerializer
+        )
+
+        val result: Result<List<DiscoverList>, ChoutenError> = kotlinx.serialization.json.Json.decodeFromString(serializer, json)
+
+        return when (result) {
+            is Result.Ok -> result.value
+            is Result.Err -> {
+                emptyList()
+            }
+        }
+    }
+
+    override fun search(query: String, filters: List<String>): List<PosterData> {
+        return emptyList()
+    }
+}
+
+
+
+
+
+/*
 // TODO: Move out into core
 sealed interface RtValue {
     data class RtObject(val fields: Map<String, RtValue>) : RtValue
@@ -82,3 +140,5 @@ class RelayRuntime: SourceRuntime {
 
     }
 }
+
+ */

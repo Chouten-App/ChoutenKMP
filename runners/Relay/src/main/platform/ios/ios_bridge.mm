@@ -85,6 +85,7 @@ uint32_t host_html_parse(const char* html, size_t len) {
 
 
 uint32_t host_query_selector(size_t docId, const char* html, size_t len) {
+    host_log("Sin", 3);
     if (gHostQuerySelector) {
         return gHostQuerySelector(docId, html, len);
     }
@@ -94,6 +95,7 @@ uint32_t host_query_selector(size_t docId, const char* html, size_t len) {
 
 
 uint32_t* host_query_selector_all(size_t docId, const char* query, size_t len, uint32_t *pInt) {
+    host_log("All", 3);
     if (gHostQuerySelectorAll) {
         return gHostQuerySelectorAll(docId, query, len, pInt);
     }

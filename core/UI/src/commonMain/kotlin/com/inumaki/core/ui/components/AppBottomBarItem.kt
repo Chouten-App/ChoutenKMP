@@ -41,51 +41,27 @@ fun AppBottomBarItem(
     )
 
     val labelAlpha by transition.animateFloat(
-        transitionSpec = {
-            spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-        },
         label = "LabelAlpha"
     ) { visible ->
         if (visible) 1f else 0f
     }
 
     val labelScale by transition.animateFloat(
-        transitionSpec = {
-            spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-        },
         label = "LabelScale"
     ) { visible ->
         if (visible) 1f else 0.8f
     }
 
     val iconScale by transition.animateFloat(
-        transitionSpec = {
-            spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-        },
         label = "IconScale"
     ) { visible ->
         if (visible) 0.725f else 1.2f
     }
 
     val iconOffsetY by transition.animateDp(
-        transitionSpec = {
-            spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-        },
         label = "IconOffsetY"
     ) { visible ->
-        if (visible) 2.dp else 10.dp
+        if (visible) 2.dp else 14.dp
     }
 
     Column(

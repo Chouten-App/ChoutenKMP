@@ -3,10 +3,9 @@ package com.inumaki.chouten.dev
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.inumaki.core.ui.model.DevClient
+import dev.chouten.core.repository.DevClient
 import dev.chouten.core.repository.startDevClient
 import dev.chouten.runners.relay.NativeBridge
-import dev.chouten.runners.relay.NativeContext
 import dev.chouten.runners.relay.RelayLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,7 +44,6 @@ class DevClientManager {
 
     fun callDiscover() {
         NativeBridge.load(wasmBytes)
-        NativeBridge.initNativeBridge(NativeContext)
 
         try {
             val result = NativeBridge.callMethod("discover_wrapper")

@@ -1,4 +1,4 @@
-package com.inumaki.core.ui.model
+package dev.chouten.core.repository
 
 interface DevClient {
     suspend fun sendLog(message: String)

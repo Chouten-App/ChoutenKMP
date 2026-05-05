@@ -81,6 +81,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
                 implementation("com.fleeksoft.ksoup:ksoup:0.2.6")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
                 implementation(project(":core:UI"))
                 implementation(project(":core:repository"))
@@ -209,7 +210,7 @@ if (isMac) {
 android {
     namespace = "dev.chouten.runners.relay"
     compileSdk = 34
-    ndkVersion = "27.3.13750724"
+    ndkVersion = "27.0.12077973"
 
     defaultConfig {
         minSdk = 26

@@ -34,12 +34,21 @@ plugins {
 }
 
 include(":composeApp")
+
+/// Core
 include(":core:UI")
 include(":core:repository")
+
+/// Features
 include(":features:Home")
 include(":features:Discover")
 include(":features:Repo")
 include(":features:Settings")
 include(":features:Info")
+
+/// Runners
+include(":runners:Local")
 include(":runners:Relay")
+
+/// Third party
 include(":backdrop")

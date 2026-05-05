@@ -24,21 +24,15 @@ import com.inumaki.core.ui.theme.AppTheme
 
 
 @Composable
-fun AppImageButton(imageUrl: String, angle: Float, width: Dp, radius: Dp, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun AppImageButton(imageUrl: String, angle: Float, width: Dp, radius: Dp, modifier: Modifier = Modifier, background: Color = AppTheme.colors.container) {
     Box(
         modifier = modifier
             .width(width)
             .aspectRatio(1f)
             .shiningBorder(angle, radius)
             .clip(RoundedCornerShape(50))
-            .background(AppTheme.colors.container)
-            .padding(8.dp)
-            .clickable(
-                indication = null,
-                interactionSource = null
-            ) {
-                onClick()
-            }
+            .background(background)
+            .padding(12.dp)
     ) {
         AsyncImage(
             model = imageUrl,

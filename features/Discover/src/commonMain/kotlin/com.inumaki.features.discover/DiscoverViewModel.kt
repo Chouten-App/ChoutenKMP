@@ -1,7 +1,8 @@
 package com.inumaki.features.discover
 
 import com.inumaki.core.ui.model.ViewModel
-import com.inumaki.features.discover.model.DiscoverList
+import com.inumaki.core.ui.model.DiscoverList
+import com.inumaki.core.ui.model.Runtime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -16,9 +17,18 @@ data class DiscoverItem(
     val title: String
 )
 
-class DiscoverViewModel : ViewModel() {
+class DiscoverViewModel(
+    runtime: Runtime
+) : ViewModel() {
     private val _state = MutableStateFlow<DiscoverUiState>(DiscoverUiState.Loading)
     val state: StateFlow<DiscoverUiState> = _state
+
+    init {
+        setLoading()
+        val data = runtime.discover()
+        // TODO: Add error support
+        setDiscoverData(data)
+    }
 
     fun setDiscoverData(data: List<DiscoverList>) {
         _state.value = DiscoverUiState.Success(data)

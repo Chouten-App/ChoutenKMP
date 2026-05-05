@@ -1,17 +1,47 @@
 package com.inumaki.chouten.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.paint
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import chouten.composeapp.generated.resources.Res
+import coil3.compose.AsyncImage
 import com.inumaki.chouten.HeadingSource
 import com.inumaki.chouten.dev.DevClientManager
 import com.inumaki.chouten.navigation.AppNavHost
@@ -20,11 +50,21 @@ import com.inumaki.chouten.navigation.overlay.FullscreenOverlay
 import com.inumaki.chouten.navigation.overlay.SheetOverlay
 import com.inumaki.chouten.navigation.overlay.SheetScrim
 import com.inumaki.core.ui.AppScaffold
+import com.inumaki.core.ui.components.AppButton
+import com.inumaki.core.ui.components.AppImage
+import com.inumaki.core.ui.components.AppImageButton
 import com.inumaki.core.ui.components.SharedElementOverlay
 import com.inumaki.core.ui.model.AppConfig
 import com.inumaki.core.ui.model.PresentationStyle
+import com.inumaki.core.ui.model.Runtime
 import com.inumaki.core.ui.model.presentationStyle
+import com.inumaki.core.ui.modifiers.shiningBorder
+import com.inumaki.core.ui.rememberTransitionController
 import com.inumaki.core.ui.theme.AppTheme
+import dev.chouten.core.repository.RepositoryManager
+import dev.chouten.features.settings.SettingsView
+import dev.chouten.features.settings.SettingsViewModel
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * Main app container that manages the navigation hierarchy and overlays.
@@ -43,6 +83,8 @@ fun AppContainer(
     appConfig: AppConfig,
     dataStore: DataStore<Preferences>,
     devClientManager: DevClientManager,
+    runtime: Runtime,
+    repositoryManager: RepositoryManager,
     modifier: Modifier = Modifier
 ) {
     // Observe navigation state
@@ -52,10 +94,72 @@ fun AppContainer(
         NavigationState.from(backStackEntries, appConfig.featureEntries)
     }
 
-    val showSheetOverlay = navigationState.topRoute?.presentationStyle() == PresentationStyle.Sheet
+    //val showSheetOverlay = navigationState.topRoute?.presentationStyle() == PresentationStyle.Sheet
+    val controller = rememberTransitionController()
 
     Box(modifier = modifier.fillMaxSize()) {
+        AppScaffold(controller = controller, appConfig) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Primary navigation host
+                AppNavHost(appConfig = appConfig)
+
+                navigationState.fullscreenRoute?.let { route ->
+                    FullscreenOverlay(
+                        route = route,
+                        navScope = appConfig.navScope,
+                        devClientManager,
+                        runtime,
+                        repositoryManager
+                    )
+                }
+            }
+
+
+            Sheet(identifier = "profileDetails") {
+                val viewModel = appConfig.navScope.viewModelStore.get("settings") {
+                    SettingsViewModel(
+                        dataStore = dataStore,
+                        onCliChange = { cliIP ->
+                            devClientManager.initialize(cliIP)
+                        }
+                    )
+                }
+                SettingsView(viewModel, appConfig)
+
+                // Close button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AppButton(
+                        "drawable/xmark-solid-full.svg",
+                        0f,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .clickable {
+                                controller.toggle("profileDetails")
+                            },
+                        background = AppTheme.colors.overlay
+                    )
+
+                    Text(
+                        "Details",
+                        style = TextStyle(
+                            color = Color(0xffd7d7d7),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.size(44.dp))
+                }
+            }
+        }
         // Main scaffold with navigation
+        /*
         AppScaffold(
             headingSource.heading,
             appConfig
@@ -68,12 +172,16 @@ fun AppContainer(
                     FullscreenOverlay(
                         route = route,
                         navScope = appConfig.navScope,
-                        devClientManager
+                        devClientManager,
+                        runtime,
+                        repositoryManager
                     )
                 }
             }
         }
+         */
 
+        /*
         // Sheet background scrim
         if (showSheetOverlay) {
             SheetScrim(
@@ -102,5 +210,95 @@ fun AppContainer(
                 SharedElementOverlay()
             }
         }
+
+
+        Box(
+            modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(0.5f))
+        )
+        // Alert
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(52.dp)
+                .fillMaxWidth()
+                .shiningBorder(60f, 32.dp)
+                .clip(RoundedCornerShape(32.dp))
+                .background(AppTheme.colors.background)
+                .padding(14.dp)
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(start = 10.dp, end = 10.dp, top = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        "Add Repository",
+                        style = TextStyle(
+                            fontWeight = FontWeight.SemiBold,
+                            color = AppTheme.colors.fg,
+                            fontSize = 18.sp
+                        )
+                    )
+                    Text(
+                        "Enter the url to the repositories json file",
+                        style = TextStyle(color = AppTheme.colors.fg.copy(0.7f))
+                    )
+                }
+
+                BasicTextField(
+                    value = "Repository URL",
+                    onValueChange = {
+                        println("Url: $it")
+                    },
+                    cursorBrush = SolidColor(AppTheme.colors.accent),
+                    textStyle = TextStyle(color = AppTheme.colors.fg.copy(0.5f)),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(50))
+                                .background(AppTheme.colors.overlay)
+                                .padding(12.dp)
+                        ) {
+                            innerTextField()
+                        }
+                    }
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        "Cancel",
+                        style = TextStyle(fontWeight = FontWeight.SemiBold, color = AppTheme.colors.fg, fontSize = 16.sp),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(50))
+                            .background(AppTheme.colors.overlay)
+                            .padding(14.dp)
+                    )
+                    Text(
+                        "OK",
+                        style = TextStyle(fontWeight = FontWeight.SemiBold, color = AppTheme.colors.fg, fontSize = 16.sp),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(50))
+                            .background(AppTheme.colors.overlay)
+                            .padding(14.dp)
+                    )
+                }
+            }
+        }
+
+         */
     }
 }

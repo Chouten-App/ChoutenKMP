@@ -11,11 +11,15 @@ m3ApiRawFunction(htmlParseFunc) {
 }
 
 m3ApiRawFunction(querySelectorFunc) {
+
+    host_log("Sel", 3);
     m3ApiReturnType(u32)
 
     m3ApiGetArg(i32, docId);
     m3ApiGetArgMem(const char*, query);
     m3ApiGetArg(i32, len);
+
+    host_log("Sel", 3);
 
     u32 id = host_query_selector(docId, query, len);
 
@@ -30,9 +34,11 @@ m3ApiRawFunction(querySelectorAllFunc)
     m3ApiGetArgMem(const char*, query)
     m3ApiGetArg(i32, len)
 
+    host_log("SelAll", 6);
+
     uint32_t array_len = 0;
     uint32_t* host_array = host_query_selector_all(docId, query, len, &array_len);
-
+    host_log("received query all data", 23);
     if (!host_array || array_len == 0)
         m3ApiReturn(0);
 
@@ -45,6 +51,7 @@ m3ApiRawFunction(querySelectorAllFunc)
         host_log("Body alloc failed", 17);
         m3ApiReturn(0);
     }
+    host_log("Allocated body", 14);
 
     uint32_t body_ptr = 0;
     const void* alloc_ret[1] = { &body_ptr };
@@ -52,6 +59,7 @@ m3ApiRawFunction(querySelectorAllFunc)
 
     uint8_t* memory = m3_GetMemory(runtime, nullptr, 0);
     memcpy(memory + body_ptr, host_array, array_len);
+    host_log("body memcpy", 11);
 
     // allocate response struct
     uint32_t struct_size = 8;
@@ -80,6 +88,7 @@ m3ApiRawFunction(querySelectorAllFunc)
 
     m3ApiReturn(struct_ptr);
 }
+
 
 m3ApiRawFunction(nodeTextFunc)
 {

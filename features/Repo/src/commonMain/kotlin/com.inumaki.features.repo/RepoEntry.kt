@@ -44,10 +44,10 @@ class RepoEntry: FeatureEntry, UiConfigProvider {
             title = "Repo",
             actions = listOf(
                 TopBarAction(
-                    "arrow-down-wide-short-solid-full.svg",
-                    contentDescription = "filter",
+                    "plus-solid-full.svg",
+                    contentDescription = "Add repo",
                     onClick = {
-                        println("Filter clicked")
+                        println("Add repo pressed")
                     }
                 )
             )

@@ -11,16 +11,30 @@ import androidx.compose.ui.graphics.Color
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.navigation.compose.rememberNavController
+import chouten.composeapp.generated.resources.Res
 import com.inumaki.chouten.HeadingSource
 import com.inumaki.chouten.common.getFeatures
 import com.inumaki.chouten.dev.DevClientManager
 import com.inumaki.core.ui.model.AppConfig
+import com.inumaki.core.ui.model.DefaultHostEnvironment
 import com.inumaki.core.ui.model.DiscoverRoute
 import com.inumaki.core.ui.model.GlobalState
+import com.inumaki.core.ui.model.HostEnvironment
 import com.inumaki.core.ui.model.NavigationScope
+import com.inumaki.core.ui.model.SourceModule
 import com.inumaki.core.ui.theme.AppTheme
+import dev.chouten.core.repository.FileRepositoryStorage
+import dev.chouten.core.repository.FileStore
+import dev.chouten.core.repository.KtorRepositoryRemote
+import dev.chouten.core.repository.RepositoryManager
+import dev.chouten.core.repository.httpClient
+import dev.chouten.runners.local.LocalRuntime
 import dev.chouten.runners.relay.NativeBridge
 import dev.chouten.runners.relay.RelayLogger
+import dev.chouten.runners.relay.RelayRuntime
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.Resource
+
 
 /**
  * Root composable that sets up the app configuration and theme.
@@ -51,6 +65,15 @@ fun AppRoot(
 
     // Dev client manager
     val devClientManager = remember { DevClientManager() }
+    val repositoryStorage = FileRepositoryStorage("repositories")
+    val repositoryRemote = KtorRepositoryRemote(httpClient)
+
+    val repositoryManager = RepositoryManager(
+        repositoryStorage,
+        repositoryRemote
+    )
+
+    val runtime = remember { RelayRuntime() }
 
     // Initialize heading observer
     LaunchedEffect(headingSource.heading) {
@@ -61,8 +84,18 @@ fun AppRoot(
 
     // Initialize native bridge and dev client
     LaunchedEffect(Unit) {
-        NativeBridge.initLogger(RelayLogger)
-        devClientManager.initializeFromDataStore(dataStore)
+        runtime.initialize(host = DefaultHostEnvironment())
+
+        // Load module from files
+
+        val sourceModule = SourceModule(
+            "demo_module",
+            binary = FileStore.read("repositories/demo_module.wasm")//Res.readBytes("files/demo_module.wasm")
+        )
+        runtime.load(sourceModule)
+
+        //NativeBridge.initLogger(RelayLogger)
+        //devClientManager.initializeFromDataStore(dataStore)
     }
 
     // App theme and container
@@ -76,7 +109,9 @@ fun AppRoot(
                 headingSource = headingSource,
                 appConfig = appConfig,
                 dataStore = dataStore,
-                devClientManager = devClientManager
+                devClientManager = devClientManager,
+                runtime,
+                repositoryManager
             )
         }
     }

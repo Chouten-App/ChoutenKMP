@@ -42,15 +42,7 @@ class HomeEntry: FeatureEntry, UiConfigProvider {
     ): TopBarConfig? = when (route) {
         is HomeRoute -> TopBarConfig(
             title = "Home",
-            actions = listOf(
-                TopBarAction(
-                    "arrow-down-wide-short-solid-full.svg",
-                    contentDescription = "filter",
-                    onClick = {
-                        println("Filter clicked")
-                    }
-                )
-            )
+            actions = listOf()
         )
         else -> null
     }

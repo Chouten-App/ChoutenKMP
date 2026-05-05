@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
@@ -42,7 +44,13 @@ kotlin {
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
             api("androidx.datastore:datastore:1.2.0")
             api("androidx.datastore:datastore-preferences:1.2.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+            implementation("com.fleeksoft.ksoup:ksoup:0.2.6")
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+
             api(project(":backdrop"))
+            implementation(project(":core:repository"))
         }
 
         androidMain.dependencies {

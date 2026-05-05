@@ -35,6 +35,7 @@ kotlin {
             implementation(compose.components.resources)
 
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
             api(project(":core:UI"))
             implementation(project(":runners:Relay"))
