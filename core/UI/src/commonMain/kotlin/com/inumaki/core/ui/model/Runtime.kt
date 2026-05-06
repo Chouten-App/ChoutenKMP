@@ -59,7 +59,10 @@ data class HttpResponse(
 
 interface HostEnvironment {
     /// Network functions
-    fun request(url: String, method: HttpMethod): String
+    fun request(url: String, method: HttpMethod): Int
+
+    /// Response functions
+    fun responseBodyAsDoc(docId: Int): Int
 
     /// HTML parsing functions
     fun htmlParse(html: String): Int
@@ -89,6 +92,9 @@ class DefaultHostEnvironment(): HostEnvironment {
     var logs: List<Log> = listOf()
 
     private val nextId = AtomicInt(1)
+
+    private val responses = mutableMapOf<Int, HttpResponse>()
+
     private val documents = mutableMapOf<Int, Document>()
     private val elements = mutableMapOf<Int, Element>()
 
@@ -100,8 +106,9 @@ class DefaultHostEnvironment(): HostEnvironment {
     override fun request(
         url: String,
         method: HttpMethod
-    ): String {
-        return runBlocking {
+    ): Int {
+        println("request START: $url")
+        val result = runBlocking {
             val response = withContext(Dispatchers.IO) {
                 httpClient.request(url) {
                     // Configure your request here
@@ -120,10 +127,21 @@ class DefaultHostEnvironment(): HostEnvironment {
                 headers = emptyMap()//response.headers.toMap(),
             )
 
-            val jsonString = Json.encodeToString(httpResponse)
-            println("JSON Length: ${jsonString.length}")  // Debug
-            jsonString
+            val id = nextId.fetchAndAdd(1)
+            responses[id] = httpResponse
+            id
         }
+        println("request END: $url took result=$result")
+        return result
+    }
+
+    override fun responseBodyAsDoc(docId: Int): Int {
+        val body = responses[docId]?.body
+
+        body?.let {
+            return htmlParse(body)
+        }
+        return -1
     }
 
     override fun htmlParse(html: String): Int {
@@ -138,8 +156,6 @@ class DefaultHostEnvironment(): HostEnvironment {
         val doc = Ksoup.parse(sanitizedHtml)
         val id = nextId.fetchAndAdd(1)
         documents[id] = doc
-
-        println("Docs -> $documents")
 
         return id
     }
@@ -195,6 +211,7 @@ class DefaultHostEnvironment(): HostEnvironment {
 
     override fun nodeText(nodeId: Int): String {
         val element = elements[nodeId]
+        println("[nodeText] Returning ${element?.text()}")
         return element?.text() ?: ""
     }
 

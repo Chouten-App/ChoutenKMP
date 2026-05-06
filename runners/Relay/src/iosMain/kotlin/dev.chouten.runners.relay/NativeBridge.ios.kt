@@ -27,20 +27,21 @@ private var modulePtr: COpaquePointer? = null
 private val responseArena = Arena()
 private val responseArenas = mutableListOf<Arena>()
 
+/*
 typealias HostRequestFn = CPointer<CFunction<(
     url: CPointer<ByteVar>?,
     len: ULong,
     method: Int,
     out_len: CPointer<UIntVar>?
 ) -> CPointer<ByteVar>?>>
-
+ */
 
 typealias HostQuerySelectorAllFn = CPointer<CFunction<(
     id: ULong,
     query: CPointer<ByteVar>?,
     len: ULong,
     out_len: CPointer<UIntVar>?
-) -> CPointer<UIntVarOf<UInt>>?>>?
+) -> CPointer<IntVarOf<Int>>?>>?
 
 typealias HostNodeTextFn = CPointer<CFunction<(
     nodeId: ULong,
@@ -69,32 +70,24 @@ actual object NativeBridge {
     private val documents = mutableMapOf<Int, Document>()
     private val elements = mutableMapOf<Int, Element>()
 
-    val requestHandler: HostRequestFn = staticCFunction {
+    val requestHandler = staticCFunction {
             url: CPointer<ByteVar>?,
-            len: ULong,
-            method: Int,
-            out_len: CPointer<UIntVar>?
+            len: UInt,
+            method: UInt
         ->
+        println("url: $url, len: $len, method: $method")
         val urlString = url?.readBytes(len.toInt())?.decodeToString() ?: ""
-        val response = hostEnvironment.request(urlString, HttpMethod.fromInt(method))
+        return@staticCFunction hostEnvironment.request(urlString, HttpMethod.fromInt(method.toInt())).toUInt()
+    }
 
-        val responseBytes = response.encodeToByteArray()
-
-        val cString = nativeHeap.allocArray<ByteVar>(responseBytes.size + 1)
-
-        for (i in responseBytes.indices) {
-            cString[i] = responseBytes[i]
-        }
-        cString[responseBytes.size] = 0.toByte()
-
-        out_len?.pointed?.value = responseBytes.size.toUInt()
-        cString
+    val responseBodyAsDocHandler = staticCFunction { docId: UInt ->
+        return@staticCFunction hostEnvironment.responseBodyAsDoc(docId.toInt()).toUInt()
     }
 
     val htmlParseHandler = staticCFunction { html: CPointer<ByteVar>?, len: ULong ->
         val rawHtml = html?.readBytes(len.toInt())?.decodeToString() ?: ""
         println("[parse]")
-        return@staticCFunction hostEnvironment.htmlParse(rawHtml).toUInt()
+        return@staticCFunction hostEnvironment.htmlParse(rawHtml)
     }
 
     val querySelectorHandler = staticCFunction { id: ULong, query: CPointer<ByteVar>?, len: ULong ->
@@ -103,10 +96,10 @@ actual object NativeBridge {
         val id = hostEnvironment.querySelector(id.toInt(), selectorString)
         if (id == -1) {
             println("[querySelector] No element found.")
-            return@staticCFunction 0.toUInt()
+            return@staticCFunction 0
         }
 
-        return@staticCFunction id.toUInt()
+        return@staticCFunction id
     }
 
     val nodeQuerySelectorHandler = staticCFunction { id: ULong, query: CPointer<ByteVar>?, len: ULong ->
@@ -115,10 +108,10 @@ actual object NativeBridge {
         val id = hostEnvironment.nodeQuerySelector(id.toInt(), selectorString)
         if (id == -1) {
             println("[nodeQuerySelector] No element found.")
-            return@staticCFunction 0.toUInt()
+            return@staticCFunction 0
         }
 
-        return@staticCFunction id.toUInt()
+        return@staticCFunction id
     }
 
     val querySelectorAllHandler: HostQuerySelectorAllFn = staticCFunction {
@@ -136,10 +129,10 @@ actual object NativeBridge {
 
         val count = results.size
 
-        val arrayPtr = nativeHeap.allocArray<UIntVar>(count)
+        val arrayPtr = nativeHeap.allocArray<IntVar>(count)
 
         for (i in 0 until count) {
-            arrayPtr[i] = results[i].toUInt()
+            arrayPtr[i] = results[i]
             println(arrayPtr[i])
         }
 
@@ -193,7 +186,7 @@ actual object NativeBridge {
         }
         val result = relay_callMethod(ptr, name)
         return result?.toKString() ?: run {
-            RelayLogger.log("RelayWASM -> callMethod '$name' returned null (function lookup failed)")
+            RelayLogger.log("RelayWASM -> callMethod '$name' returned null")
             ""
         }
     }
@@ -225,6 +218,7 @@ actual object NativeBridge {
         }
 
         relay_set_request_handler(requestHandler)
+        relay_set_response_body_as_doc_handler(responseBodyAsDocHandler)
         relay_set_html_parse_handler(htmlParseHandler)
         relay_set_query_selector_handler(querySelectorHandler)
         relay_set_query_selector_all_handler(querySelectorAllHandler)

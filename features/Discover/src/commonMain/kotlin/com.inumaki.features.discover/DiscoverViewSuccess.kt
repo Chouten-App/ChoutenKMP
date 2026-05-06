@@ -44,7 +44,9 @@ fun DiscoverViewSuccess(items: List<DiscoverList>, angle: Float) {
                 when (item.section_type) {
                     "CAROUSEL" -> {
                         item {
-                            CarouselCard(item.list[0], angle)
+                            if (item.list.size > 0) {
+                                CarouselCard(item.list[0], angle)
+                            }
                         }
                     }
 

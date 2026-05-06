@@ -2614,7 +2614,10 @@ _           (Compile_Operator (o, opcode));
 
         if (opcode == c_waOp_else)
         {
-            _throwif (m3Err_wasmMalformed, o->block.opcode != c_waOp_if);
+            if (o->block.opcode != c_waOp_if) {
+                fprintf(stderr, "malformed at 2617: block opcode=%d\n", o->block.opcode);
+                _throw(m3Err_wasmMalformed);
+            }
             validEnd = true;
             break;
         }
@@ -2624,7 +2627,10 @@ _           (Compile_Operator (o, opcode));
             break;
         }
     }
-    _throwif(m3Err_wasmMalformed, !(validEnd));
+    if (!(validEnd)) {
+        fprintf(stderr, "malformed at 2627\n");
+        _throw(m3Err_wasmMalformed);
+    }
 
 _catch:
     return result;
@@ -2908,7 +2914,10 @@ _   (EmitOp (o, op_Entry));
 _   (CompileBlockStatements (o));
 
     // TODO: validate opcode sequences
-    _throwif(m3Err_wasmMalformed, o->previousOpcode != c_waOp_end);
+    if (o->previousOpcode != c_waOp_end) {
+        fprintf(stderr, "malformed at 2911: prev opcode=%d\n", o->previousOpcode);
+        _throw(m3Err_wasmMalformed);
+    }
 
     io_function->compiled = pc;
     io_function->maxStackSlots = o->maxStackSlots;

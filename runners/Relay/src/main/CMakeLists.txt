@@ -33,6 +33,7 @@ target_include_directories(relay PUBLIC
 )
 
 target_compile_options(relay PRIVATE -fexceptions)
+target_compile_definitions(relay PRIVATE d_m3EnableStrace=1)
 
 if(IOS)
     target_compile_options(relay PRIVATE -fPIC -Wno-extern-c-compat)

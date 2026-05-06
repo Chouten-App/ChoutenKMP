@@ -4,11 +4,14 @@ m3ApiRawFunction(requestFunc)
 {
     m3ApiReturnType(u32)
     m3ApiGetArgMem(const char*, url);
-    m3ApiGetArg(i32, len);
-    m3ApiGetArg(i32, method);
+    m3ApiGetArg(u32, len);
+    m3ApiGetArg(u32, method);
 
-    uint32_t resp_len = 0;
-    const char* resp_data = host_request(url, len, method, &resp_len);
+    host_log("before request", 14);
+    u32 resp_data = host_request(url, len, method);
+    host_log("after request", 13);
+    m3ApiReturn(resp_data)
+    /*
     struct ResponseGuard {
         const char* data;
         ~ResponseGuard() { if (data) free((void*)data); }
@@ -93,4 +96,5 @@ m3ApiRawFunction(requestFunc)
     host_log(log_buf, strlen(log_buf));
 
     m3ApiReturn(struct_ptr);
+     */
 }

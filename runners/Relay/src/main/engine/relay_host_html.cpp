@@ -1,11 +1,21 @@
 #include "relay_host_functions.h"
 
-m3ApiRawFunction(htmlParseFunc) {
+m3ApiRawFunction(responseGetBodyAsDoc) {
     m3ApiReturnType(u32)
+    m3ApiGetArg(u32, docId);
+
+    u32 id = host_response_get_body_as_doc(docId);
+
+    m3ApiReturn(id)
+}
+
+
+m3ApiRawFunction(htmlParseFunc) {
+    m3ApiReturnType(i32)
     m3ApiGetArgMem(const char*, html);
     m3ApiGetArg(i32, len);
 
-    u32 id = host_html_parse(html, len);
+    i32 id = host_html_parse(html, len);
 
     m3ApiReturn(id)
 }
@@ -29,64 +39,74 @@ m3ApiRawFunction(querySelectorFunc) {
 m3ApiRawFunction(querySelectorAllFunc)
 {
     m3ApiReturnType(u32)
-
     m3ApiGetArg(i32, docId)
     m3ApiGetArgMem(const char*, query)
     m3ApiGetArg(i32, len)
 
-    host_log("SelAll", 6);
+    m3ApiReturn(0)
+
+    /*
 
     uint32_t array_len = 0;
-    uint32_t* host_array = host_query_selector_all(docId, query, len, &array_len);
-    host_log("received query all data", 23);
+    int32_t* host_array = host_query_selector_all(docId, query, len, &array_len);
     if (!host_array || array_len == 0)
-        m3ApiReturn(0);
+    m3ApiReturn(0);
 
+    // Byte count for the array, and padded to next 64KB boundary
     uint32_t wasm_bytes = array_len * sizeof(uint32_t);
+    uint32_t padded_bytes = (wasm_bytes + 65535u) & ~65535u;
 
-    const void* alloc_args[1] = { &array_len };
-    M3Result res = m3_Call(alloc_fn, 1, alloc_args);
-
-    if (res != m3Err_none) {
-        host_log("Body alloc failed", 17);
-        m3ApiReturn(0);
-    }
-    host_log("Allocated body", 14);
-
+    // Allocate array — pass PADDED BYTE COUNT, not element count
     uint32_t body_ptr = 0;
-    const void* alloc_ret[1] = { &body_ptr };
-    m3_GetResults(alloc_fn, 1, alloc_ret);
-
-    uint8_t* memory = m3_GetMemory(runtime, nullptr, 0);
-    memcpy(memory + body_ptr, host_array, array_len);
-    host_log("body memcpy", 11);
-
-    // allocate response struct
-    uint32_t struct_size = 8;
-    const void* struct_args[1] = { &struct_size };
-    res = m3_Call(alloc_fn, 1, struct_args);
-
-    if (res != m3Err_none) {
-        host_log("Struct alloc failed", 19);
+    {
+        const void* args[1] = { &padded_bytes };
+        if (m3_Call(alloc_fn, 1, args) != m3Err_none) {
+            host_log("Array alloc failed", 18);
+            m3ApiReturn(0);
+        }
+        const void* rets[1] = { &body_ptr };
+        m3_GetResults(alloc_fn, 1, rets);
+    }
+    if (body_ptr == 0) {
+        host_log("Null array pointer", 18);
         m3ApiReturn(0);
     }
 
+    // Allocate struct
     uint32_t struct_ptr = 0;
-    const void* struct_ret[1] = { &struct_ptr };
-    m3_GetResults(alloc_fn, 1, struct_ret);
-
+    {
+        uint32_t struct_size = 8;
+        const void* args[1] = { &struct_size };
+        if (m3_Call(alloc_fn, 1, args) != m3Err_none) {
+            host_log("Struct alloc failed", 19);
+            m3ApiReturn(0);
+        }
+        const void* rets[1] = { &struct_ptr };
+        m3_GetResults(alloc_fn, 1, rets);
+    }
     if (struct_ptr == 0) {
         host_log("Null struct pointer", 19);
         m3ApiReturn(0);
     }
 
-    // Write struct: [body_ptr, body_len]
-    memory = m3_GetMemory(runtime, nullptr, 0);
-    uint32_t* struct_data = (uint32_t*)(memory + struct_ptr);
-    struct_data[0] = body_ptr;
-    struct_data[1] = array_len;
+    // Single m3_GetMemory fetch after ALL allocations
+    uint32_t mem_size = 0;
+    uint8_t* memory = m3_GetMemory(runtime, &mem_size, 0);
+
+    if (!memory || (uint64_t)body_ptr + wasm_bytes > mem_size) {
+        host_log("FATAL: array exceeds memory bounds", 34);
+        m3ApiReturn(0);
+    }
+
+    // memcpy uses ACTUAL byte count (wasm_bytes), not element count, not padded
+    memcpy(memory + body_ptr, host_array, wasm_bytes);
+
+    uint32_t* s = reinterpret_cast<uint32_t*>(memory + struct_ptr);
+    s[0] = body_ptr;
+    s[1] = array_len; // element count for WASM to iterate with
 
     m3ApiReturn(struct_ptr);
+     */
 }
 
 

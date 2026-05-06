@@ -83,6 +83,8 @@ kotlin {
                 implementation("com.fleeksoft.ksoup:ksoup:0.2.6")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
+                implementation("io.github.charlietap.chasm:chasm:1.4.4")
+
                 implementation(project(":core:UI"))
                 implementation(project(":core:repository"))
             }

@@ -10,7 +10,7 @@ extern "C" {
 
 // Function pointer typedef - must be visible to cinterop
 
-typedef const char* (*HostRequestFn)(const char* url, size_t len, int32_t method, uint32_t* out_len);
+typedef int32_t (*HostRequestFn)(const char* url, size_t len, int32_t method);
 
 // Public C API
 void relay_set_request_handler(HostRequestFn handler);

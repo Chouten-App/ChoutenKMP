@@ -19,5 +19,7 @@ struct Wasm3Module {
 
     void initHostFunctions() const;
 
+    M3Result initialize();
+
     const char* callMethod(const char* name);
 };
