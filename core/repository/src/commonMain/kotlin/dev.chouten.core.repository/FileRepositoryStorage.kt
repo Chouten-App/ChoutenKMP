@@ -28,7 +28,10 @@ class FileRepositoryStorage(
 
     override suspend fun saveRepositories(repos: List<Repository>) {
         val current = read()
-        write(current.copy(repositories = repos))
+        val updated = current.copy(repositories = repos)
+        println("[FileRepositoryStorage] Current repos -> $current")
+        println("[FileRepositoryStorage] Updated repos -> $updated")
+        write(updated)
     }
 
     override suspend fun getInstalledModules(): List<InstalledModule> {
@@ -41,11 +44,15 @@ class FileRepositoryStorage(
     }
 
     private suspend fun read(): StorageModel {
+        println("[FileRepositoryStorage] Reading repo.json")
         if (!FileStore.exists(filePath)) {
+            println("[FileRepositoryStorage] repo.json does not exist")
             return StorageModel()
         }
 
+        println("[FileRepositoryStorage] Reading repo.json bytes")
         val bytes = readBytes(filePath)
+        println("[FileRepositoryStorage] Converting repo.json")
         return json.decodeFromString(StorageModel.serializer(), bytes?.decodeToString() ?: "")
     }
 

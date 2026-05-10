@@ -26,6 +26,9 @@ class KtorRepositoryRemote(
                     id = it.id,
                     name = it.name,
                     version = it.version,
+                    description = it.description,
+                    author = it.author.name,
+                    iconUrl = it.icon,
                     manifestUrl = it.downloads.manifest,
                     wasmUrl = it.downloads.wasm
                 )

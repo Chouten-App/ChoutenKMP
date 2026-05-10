@@ -23,6 +23,7 @@ class RepositoryManager(
             remote.fetchRepository(repo.url)
                 .copy(lastUpdated = currentTimeMillis())
         }
+        println("[RepositoryManager] Updated repos -> $updated")
         storage.saveRepositories(updated)
     }
 
@@ -61,19 +62,19 @@ class RepositoryManager(
         )
     }
 
-    suspend fun getUpdatableModules(): List<Pair<InstalledModule, RemoteModule>> {
+    suspend fun getInstalledModules() = getAllModules().filter { (local, _) -> local != null }
+    suspend fun getUpdatableModules() = getAllModules().filter { (local, remote) ->
+        local != null && local.version != remote.version
+    }
+
+    suspend fun getAllModules(): List<Pair<InstalledModule?, RemoteModule>> {
         val installed = storage.getInstalledModules()
         val repos = storage.getRepositories()
+        println("[RepositoryManager] repos -> $repos")
+        val installedMap = installed.associateBy { it.id }
 
-        val remoteMap = repos.flatMap { it.modules }
-            .associateBy { it.id }
-
-        return installed.mapNotNull { local ->
-            val remote = remoteMap[local.id] ?: return@mapNotNull null
-
-            if (remote.version != local.version) {
-                local to remote
-            } else null
+        return repos.flatMap { it.modules }.map { remote ->
+            installedMap[remote.id] to remote  // InstalledModule? — null means not installed
         }
     }
 

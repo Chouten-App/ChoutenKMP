@@ -12,22 +12,30 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
@@ -50,6 +58,7 @@ import com.inumaki.chouten.navigation.overlay.FullscreenOverlay
 import com.inumaki.chouten.navigation.overlay.SheetOverlay
 import com.inumaki.chouten.navigation.overlay.SheetScrim
 import com.inumaki.core.ui.AppScaffold
+import com.inumaki.core.ui.components.AppAsyncImage
 import com.inumaki.core.ui.components.AppButton
 import com.inumaki.core.ui.components.AppImage
 import com.inumaki.core.ui.components.AppImageButton
@@ -61,6 +70,8 @@ import com.inumaki.core.ui.model.presentationStyle
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.rememberTransitionController
 import com.inumaki.core.ui.theme.AppTheme
+import dev.chouten.core.repository.InstalledModule
+import dev.chouten.core.repository.RemoteModule
 import dev.chouten.core.repository.RepositoryManager
 import dev.chouten.features.settings.SettingsView
 import dev.chouten.features.settings.SettingsViewModel
@@ -96,6 +107,12 @@ fun AppContainer(
 
     //val showSheetOverlay = navigationState.topRoute?.presentationStyle() == PresentationStyle.Sheet
     val controller = rememberTransitionController()
+    var allModules by remember { mutableStateOf<List<Pair<InstalledModule?, RemoteModule>>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        repositoryManager.refreshRepositories()
+        allModules = repositoryManager.getAllModules()
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         AppScaffold(controller = controller, appConfig) {
@@ -147,6 +164,99 @@ fun AppContainer(
 
                     Text(
                         "Details",
+                        style = TextStyle(
+                            color = Color(0xffd7d7d7),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.size(44.dp))
+                }
+            }
+
+            Sheet("ModuleSelector") {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(top = 50.dp)
+                        .padding(20.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(AppTheme.colors.overlay)
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    itemsIndexed(allModules) { index, (local, remote) ->
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    remote.iconUrl?.let {
+                                        AppAsyncImage(
+                                            it,
+                                            modifier = Modifier
+                                                .width(44.dp)
+                                                .height(44.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                        )
+                                    }
+                                    Column {
+                                        Text(remote.name)
+                                        Text(remote.author, modifier = Modifier.alpha(0.7f))
+                                    }
+                                }
+
+                                Text(
+                                    "GET",
+                                    style = TextStyle(
+                                        color = AppTheme.colors.accent,
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(50))
+                                        .background(AppTheme.colors.border)
+                                        .padding(8.dp, 4.dp)
+                                )
+                            }
+
+                            if (index < allModules.size - 1) {
+                                HorizontalDivider(
+                                    Modifier.padding(start = 52.dp, top = 14.dp),
+                                    color = AppTheme.colors.border,
+                                    thickness = 1.dp
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Close button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AppButton(
+                        "drawable/xmark-solid-full.svg",
+                        0f,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .clickable {
+                                controller.toggle("ModuleSelector")
+                            },
+                        background = AppTheme.colors.overlay
+                    )
+
+                    Text(
+                        "Modules",
                         style = TextStyle(
                             color = Color(0xffd7d7d7),
                             fontSize = 15.sp,

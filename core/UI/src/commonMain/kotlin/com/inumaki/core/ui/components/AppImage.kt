@@ -24,3 +24,12 @@ fun AppImage(icon: String, title: String? = null, modifier: Modifier = Modifier,
         modifier = modifier
     )
 }
+
+@Composable
+fun AppAsyncImage(icon: String, title: String? = null, modifier: Modifier = Modifier) {
+    AsyncImage(
+        icon,
+        contentDescription = title,
+        modifier = modifier
+    )
+}
