@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -54,6 +56,7 @@ import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -133,7 +136,9 @@ data class TransitionState(
     val progress: Float = 0f,
     val isDragging: Boolean = false,
     val dragOffsetX: Float = 0f,
-    val dragOffsetY: Float = 0f
+    val dragOffsetY: Float = 0f,
+    val scaleX: Float = 0f,
+    val scaleY: Float = 1f
 )
 
 
@@ -212,12 +217,16 @@ class TransitionController(
     fun updateDragState(
         isDragging: Boolean,
         dragOffsetX: Float = 0f,
-        dragOffsetY: Float = 0f
+        dragOffsetY: Float = 0f,
+        scaleX: Float = 0f,
+        scaleY: Float = 1f
     ) {
         state = state.copy(
             isDragging = isDragging,
             dragOffsetX = dragOffsetX,
-            dragOffsetY = dragOffsetY
+            dragOffsetY = dragOffsetY,
+            scaleX = scaleX,
+            scaleY = scaleY
         )
     }
 
@@ -512,6 +521,7 @@ fun AppScaffold(
 
     val manager = remember { AlertManager() }
 
+    val coroutineScope = rememberCoroutineScope()
     val scope = remember(controller) {
         MatchedTransitionScopeImpl(controller, sheets)
     }
@@ -580,18 +590,17 @@ fun AppScaffold(
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
-                            .offset {
-                                if (controller.state.isDragging) {
-                                    IntOffset(
-                                        controller.state.dragOffsetX.roundToInt(),
-                                        controller.state.dragOffsetY.roundToInt()
-                                    )
-                                } else {
-                                    IntOffset(geometry.x.roundToInt(), geometry.y.roundToInt())
-                                }
+                            .graphicsLayer {
+                                translationX = geometry.x + if (controller.state.isDragging) controller.state.dragOffsetX else 0f
+                                translationY = geometry.y + if (controller.state.isDragging) controller.state.scaleX * -80f else 0f//geometry.y + if (controller.state.isDragging) controller.state.dragOffsetY else 0f
                             }
-                            .width(geometry.width)
-                            .height(geometry.height)
+                            .width(
+                                geometry.width * lerp(
+                                    1f, 0.7f,
+                                    controller.state.scaleX
+                                )
+                            )
+                            .height(geometry.height * controller.state.scaleY)
                             .clip(
                                 RoundedCornerShape(
                                     topStart = geometry.topRadius,
@@ -602,61 +611,86 @@ fun AppScaffold(
                             )
                             .background(containerColor)
                             .pointerInput(Unit) {
-                                detectVerticalDragGestures(
+                                detectDragGestures(
                                     onDragStart = {
-                                        if (!ScrollGate.canDrag) return@detectVerticalDragGestures
-                                        controller.updateDragState(isDragging = true)
+                                        if (!ScrollGate.canDrag) return@detectDragGestures
+                                        controller.updateDragState(
+                                            isDragging = true,
+                                            dragOffsetX = 0f,
+                                            dragOffsetY = 0f  // reset raw delta on each drag start
+                                        )
                                     },
-                                    onVerticalDrag = { change, dragAmount ->
-                                        if (!ScrollGate.canDrag) return@detectVerticalDragGestures
-
+                                    onDrag = { change, dragAmount ->
+                                        if (!ScrollGate.canDrag) return@detectDragGestures
                                         change.consume()
 
-                                        val newOffsetY =
-                                            controller.state.dragOffsetY + dragAmount
-
-                                        val maxDragDistance = maxHeight.toPx() * 0.9f
-                                        val clamped = newOffsetY.coerceIn(0f, maxDragDistance)
+                                        // accumulate raw finger delta only
+                                        val newOffsetY = controller.state.dragOffsetY + dragAmount.y
+                                        val newOffsetX = controller.state.dragOffsetX + dragAmount.x
+                                        val maxDragDistanceY = maxHeight.toPx() * 0.6f
+                                        val maxDragDistanceX = maxWidth.toPx()
+                                        val clampedY = (newOffsetY / maxDragDistanceY).coerceIn(0f, 1f)
+                                        val clampedX = (newOffsetX / maxDragDistanceX).coerceIn(0f, 1f)
 
                                         controller.updateDragState(
                                             isDragging = true,
-                                            dragOffsetY = clamped
+                                            dragOffsetX = newOffsetX,  // store raw delta, not scaled
+                                            dragOffsetY = newOffsetY,
+                                            scaleX = lerp(0f, 1f, clampedY),
+                                            scaleY = lerp(1f, 0.3f, clampedY)
                                         )
-
-                                        val progress = 1f - (clamped / maxDragDistance)
-                                        controller.snapProgress(progress)
                                     },
                                     onDragEnd = {
                                         controller.updateDragState(isDragging = false)
+                                        if (controller.state.scaleX > 0.5f) {
+                                            //controller.snapProgress(1f)
+                                            coroutineScope.launch { controller.collapse() }
+                                        } else {
+                                            coroutineScope.launch { controller.expand(activeId) }
+                                        }
                                     },
                                     onDragCancel = {
                                         controller.updateDragState(isDragging = false)
+                                        if (controller.state.scaleX > 0.5f) {
+                                            //controller.snapProgress(1f)
+                                            coroutineScope.launch { controller.collapse() }
+                                        } else {
+                                            coroutineScope.launch { controller.expand(activeId) }
+                                        }
                                     }
                                 )
                             }
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
                                 .graphicsLayer {
-                                    scaleX = geometry.scale
-                                    scaleY = geometry.scale
                                     alpha = segment(geometry.alpha, 0.5f, 1f)
-                                    transformOrigin = TransformOrigin.Center
                                 }
+                                .fillMaxSize()
                         ) {
-                            activeSheet.expandedContent(this)
+                            val widthScale = lerp(1f, 0.7f, controller.state.scaleX)
+                            val heightScale = controller.state.scaleY
+                            val contentScale = maxOf(widthScale, heightScale)
+
+                            Box(
+                                modifier = Modifier
+                                    .requiredSize(geometry.width, geometry.height) // full original size
+                                    .scale(contentScale)                           // scale down visually + for hit-testing
+                                    .align(Alignment.TopCenter)
+                            ) {
+                                activeSheet.expandedContent(this)
+                            }
                         }
 
                         Box(
                             modifier = Modifier
-                                .align(Alignment.Center)
                                 .graphicsLayer {
                                     scaleX = 1 + geometry.scale
                                     scaleY = 1 + geometry.scale
                                     alpha = 1f - segment(geometry.alpha, 0f, 0.5f)
                                     transformOrigin = TransformOrigin.Center
                                 }
+                                .align(Alignment.Center)
                         ) {
                             activeSheet.sourceContent?.let { it(this) }
                         }
