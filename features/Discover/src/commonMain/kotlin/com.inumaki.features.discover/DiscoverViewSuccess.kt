@@ -27,13 +27,16 @@ import com.inumaki.core.ui.components.PosterCard
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.theme.AppTheme
 import com.inumaki.features.discover.components.CarouselCard
-import com.inumaki.core.ui.model.DiscoverList
+import dev.chouten.core.repository.DiscoverList
+import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 
 @Composable
-fun DiscoverViewSuccess(items: List<DiscoverList>, angle: Float) {
+fun DiscoverViewSuccess(items: List<DiscoverList>, angle: Float, backdrop: LayerBackdrop) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .layerBackdrop(backdrop)
             .background(AppTheme.colors.background),
         horizontalAlignment = Alignment.Start
     ) {

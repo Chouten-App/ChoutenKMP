@@ -3,11 +3,17 @@ package dev.chouten.core.repository
 import dev.chouten.core.repository.DevClient
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
+import io.ktor.client.request.request
+import io.ktor.client.statement.bodyAsText
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.concurrent.atomics.AtomicInt
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.time.Instant
 
 expect val httpClient: HttpClient
 
@@ -80,4 +86,21 @@ fun startDevClient(
     }
 
     return devClient
+}
+
+sealed interface RtValue {
+    data class RtObject(val fields: Map<String, RtValue>) : RtValue
+    data class RtArray(val items: List<RtValue>) : RtValue
+    data class RtString(val value: String) : RtValue
+    data class RtNumber(val value: Double) : RtValue
+    data class RtBool(val value: Boolean) : RtValue
+    data object RtNull : RtValue
+}
+
+sealed class SourceOperation(val functionName: String) {
+    data object Search : SourceOperation("search")
+    data object Details : SourceOperation("details")
+    data object Chapters : SourceOperation("chapters")
+    data object Pages : SourceOperation("pages")
+    data object Stream : SourceOperation("stream")
 }

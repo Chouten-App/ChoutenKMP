@@ -1,8 +1,8 @@
 package com.inumaki.features.discover
 
 import com.inumaki.core.ui.model.ViewModel
-import com.inumaki.core.ui.model.DiscoverList
-import com.inumaki.core.ui.model.Runtime
+import dev.chouten.core.repository.DiscoverList
+import dev.chouten.core.repository.Runtime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

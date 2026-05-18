@@ -43,6 +43,7 @@ kotlin {
             implementation("io.ktor:ktor-client-content-negotiation")
             implementation("io.ktor:ktor-client-websockets")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+            implementation("com.fleeksoft.ksoup:ksoup:0.2.6")
 
             //implementation(project(":core:UI"))
         }

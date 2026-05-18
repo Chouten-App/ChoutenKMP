@@ -27,6 +27,7 @@ data class InstalledModule(
     val id: String,
     val version: String,
     val localPath: String,
+    val imagePath: String,
     val sourceRepo: String
 )
 
@@ -81,6 +82,7 @@ interface RepositoryStorage {
 interface RepositoryRemote {
     suspend fun fetchRepository(url: String): Repository
     suspend fun downloadModule(url: String): ByteArray
+    suspend fun downloadImage(url: String): ByteArray
 }
 
 interface ModuleSource {

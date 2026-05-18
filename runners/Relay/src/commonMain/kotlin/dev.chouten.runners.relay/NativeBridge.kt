@@ -4,7 +4,7 @@ import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
 import com.fleeksoft.ksoup.nodes.Element
 import dev.chouten.core.repository.DevClient
-import com.inumaki.core.ui.model.HostEnvironment
+import dev.chouten.core.repository.HostEnvironment
 import dev.chouten.core.repository.httpClient
 import io.ktor.client.request.request
 import io.ktor.client.statement.bodyAsText

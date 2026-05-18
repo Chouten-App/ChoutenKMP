@@ -30,25 +30,56 @@ class RepositoryManager(
 
     suspend fun installModule(moduleId: String) {
         val repos = storage.getRepositories()
-
         val module = repos
             .flatMap { it.modules }
             .first { it.id == moduleId }
 
         val wasm = remote.downloadModule(module.wasmUrl)
+        val wasmPath = saveToDisk(module.id, module.version, wasm)
 
-        val path = saveToDisk(module.id, module.version, wasm)
+        val imageBytes = remote.downloadImage(module.iconUrl ?: "")
+        val imagePath = saveImageToDisk(module.id, module.version, imageBytes)
 
         val installed = storage.getInstalledModules()
-
         storage.saveInstalledModules(
             installed + InstalledModule(
                 id = module.id,
                 version = module.version,
-                localPath = path,
+                localPath = wasmPath,
+                imagePath = imagePath,
                 sourceRepo = findRepoOf(moduleId, repos)
             )
         )
+    }
+
+    suspend fun saveImageToDisk(moduleId: String, version: String, bytes: ByteArray): String {
+        val ext = detectImageExtension(bytes)
+        val dir = "$base/modules/$moduleId/$version/"
+        val final = "${dir}icon.$ext"
+        FileStore.createDirectories(dir)
+        FileStore.write(final, bytes)
+        return final
+    }
+
+    fun detectImageExtension(bytes: ByteArray): String = when {
+        bytes.size >= 4 &&
+                bytes[0] == 0x89.toByte() &&
+                bytes[1] == 0x50.toByte() &&
+                bytes[2] == 0x4E.toByte() &&
+                bytes[3] == 0x47.toByte() -> "png"
+
+        bytes.size >= 3 &&
+                bytes[0] == 0xFF.toByte() &&
+                bytes[1] == 0xD8.toByte() &&
+                bytes[2] == 0xFF.toByte() -> "jpg"
+
+        bytes.size >= 4 &&
+                bytes[0] == 0x52.toByte() &&
+                bytes[1] == 0x49.toByte() &&
+                bytes[2] == 0x46.toByte() &&
+                bytes[3] == 0x46.toByte() -> "webp"
+
+        else -> "png" // safe fallback
     }
 
     suspend fun removeModule(moduleId: String) {

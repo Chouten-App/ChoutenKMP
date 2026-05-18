@@ -15,8 +15,8 @@ import com.inumaki.core.ui.model.ResultSerializer
 import com.inumaki.core.ui.model.onOk
 import com.inumaki.features.discover.DiscoverView
 import com.inumaki.features.discover.DiscoverViewModel
-import com.inumaki.core.ui.model.DiscoverList
-import com.inumaki.core.ui.model.Runtime
+import dev.chouten.core.repository.DiscoverList
+import dev.chouten.core.repository.Runtime
 import com.inumaki.features.home.HomeView
 import com.inumaki.features.repo.RepoView
 import dev.chouten.core.repository.RepositoryManager

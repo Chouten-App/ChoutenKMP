@@ -14,13 +14,22 @@ import androidx.compose.ui.unit.dp
 import com.inumaki.core.ui.MatchedElement
 import com.inumaki.core.ui.components.AppImageButton
 import com.inumaki.core.ui.model.GlobalState
-import com.inumaki.core.ui.model.Runtime
+import dev.chouten.core.repository.Runtime
 import com.inumaki.core.ui.model.toolbar
+import com.inumaki.core.ui.theme.AppTheme
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
 @Composable
 fun DiscoverView(viewModel: DiscoverViewModel) {
     val state by viewModel.state.collectAsState()
     val angle by GlobalState.angle.collectAsState()
+
+    val bg = AppTheme.colors.background
+
+    val backdrop = rememberLayerBackdrop {
+        drawRect(bg)
+        drawContent()
+    }
 
     Box(
         modifier = Modifier
@@ -35,7 +44,7 @@ fun DiscoverView(viewModel: DiscoverViewModel) {
                         "https://raw.githubusercontent.com/celymyst/debug_repo/main/modules/weeb-central/icon.png",
                         angle,
                         44.dp,
-                        44.dp,
+                        44.dp
                     )
                 }
             }
@@ -52,7 +61,7 @@ fun DiscoverView(viewModel: DiscoverViewModel) {
             }
 
             is DiscoverUiState.Success -> {
-                DiscoverViewSuccess((state as DiscoverUiState.Success).items, angle)
+                DiscoverViewSuccess((state as DiscoverUiState.Success).items, angle, backdrop)
             }
 
             is DiscoverUiState.Error -> {

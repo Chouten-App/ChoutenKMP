@@ -5,8 +5,8 @@ package dev.chouten.runners.relay
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
 import com.fleeksoft.ksoup.nodes.Element
-import com.inumaki.core.ui.model.HostEnvironment
-import com.inumaki.core.ui.model.HttpMethod
+import dev.chouten.core.repository.HostEnvironment
+import dev.chouten.core.repository.HttpMethod
 import dev.chouten.core.repository.httpClient
 import dev.chouten.runners.relay.NativeBridge.hostEnvironment
 import io.ktor.client.request.request

@@ -26,7 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.inumaki.core.ui.model.PosterData
+import dev.chouten.core.repository.PosterData
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.theme.AppLayout
 import com.inumaki.core.ui.theme.AppTheme

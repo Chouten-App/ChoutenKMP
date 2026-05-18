@@ -3,6 +3,7 @@ package dev.chouten.core.repository
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.http.contentType
 import kotlinx.serialization.json.*
 
 class KtorRepositoryRemote(
@@ -38,5 +39,14 @@ class KtorRepositoryRemote(
 
     override suspend fun downloadModule(url: String): ByteArray {
         return client.get(url).body()
+    }
+
+    override suspend fun downloadImage(url: String): ByteArray {
+        val response = httpClient.get(url)
+        val contentType = response.contentType()?.toString() ?: ""
+        require(contentType.startsWith("image/")) {
+            "Expected image content type, got $contentType for $url"
+        }
+        return response.body()
     }
 }

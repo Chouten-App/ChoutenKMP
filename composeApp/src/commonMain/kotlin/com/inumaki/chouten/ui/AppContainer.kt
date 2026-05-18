@@ -1,6 +1,7 @@
 package com.inumaki.chouten.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,16 +67,18 @@ import com.inumaki.core.ui.components.AppImageButton
 import com.inumaki.core.ui.components.SharedElementOverlay
 import com.inumaki.core.ui.model.AppConfig
 import com.inumaki.core.ui.model.PresentationStyle
-import com.inumaki.core.ui.model.Runtime
+import dev.chouten.core.repository.Runtime
 import com.inumaki.core.ui.model.presentationStyle
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.rememberTransitionController
 import com.inumaki.core.ui.theme.AppTheme
 import dev.chouten.core.repository.InstalledModule
+import dev.chouten.core.repository.ModuleManager
 import dev.chouten.core.repository.RemoteModule
 import dev.chouten.core.repository.RepositoryManager
 import dev.chouten.features.settings.SettingsView
 import dev.chouten.features.settings.SettingsViewModel
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -96,8 +100,10 @@ fun AppContainer(
     devClientManager: DevClientManager,
     runtime: Runtime,
     repositoryManager: RepositoryManager,
+    moduleManager: ModuleManager,
     modifier: Modifier = Modifier
 ) {
+    val scope = rememberCoroutineScope()
     // Observe navigation state
     val backStackEntries by appConfig.navController.currentBackStack.collectAsState()
 
@@ -108,6 +114,8 @@ fun AppContainer(
     //val showSheetOverlay = navigationState.topRoute?.presentationStyle() == PresentationStyle.Sheet
     val controller = rememberTransitionController()
     var allModules by remember { mutableStateOf<List<Pair<InstalledModule?, RemoteModule>>>(emptyList()) }
+
+    val activeModule by moduleManager.activeModule.collectAsState()
 
     LaunchedEffect(Unit) {
         repositoryManager.refreshRepositories()
@@ -187,6 +195,7 @@ fun AppContainer(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     itemsIndexed(allModules) { index, (local, remote) ->
+                        val moduleState = if (local == null) "GET" else if (local.version != remote.version) "UPDATE" else "REFRESH"
                         Column {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -197,13 +206,23 @@ fun AppContainer(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    remote.iconUrl?.let {
+                                    val iconPath = local?.imagePath ?: remote.iconUrl
+                                    iconPath?.let {
                                         AppAsyncImage(
                                             it,
                                             modifier = Modifier
                                                 .width(44.dp)
                                                 .height(44.dp)
+                                                .border(if (activeModule?.id == local?.id) 1.dp else 0.dp, AppTheme.colors.accent, RoundedCornerShape(8.dp))
                                                 .clip(RoundedCornerShape(8.dp))
+                                                .clickable {
+                                                    local?.let { module ->
+                                                        scope.launch {
+                                                            moduleManager.loadModule(module.id)
+                                                            moduleManager.activateModule(module.id)
+                                                        }
+                                                    }
+                                                }
                                         )
                                     }
                                     Column {
@@ -213,7 +232,7 @@ fun AppContainer(
                                 }
 
                                 Text(
-                                    "GET",
+                                    moduleState,
                                     style = TextStyle(
                                         color = AppTheme.colors.accent,
                                         fontWeight = FontWeight.Medium
@@ -222,6 +241,30 @@ fun AppContainer(
                                         .clip(RoundedCornerShape(50))
                                         .background(AppTheme.colors.border)
                                         .padding(8.dp, 4.dp)
+                                        .clickable {
+                                            when (moduleState) {
+                                                "GET" -> {
+                                                    println("Installing ${remote.name}")
+
+                                                    scope.launch {
+                                                        repositoryManager.installModule(remote.id)
+                                                        allModules = repositoryManager.getAllModules()
+                                                    }
+                                                }
+                                                "REFRESH" -> {
+                                                    println("Refreshing ${remote.name}")
+
+                                                    scope.launch {
+                                                        repositoryManager.installModule(remote.id)
+                                                        allModules = repositoryManager.getAllModules()
+                                                    }
+                                                }
+                                                "UPDATE" -> {
+
+                                                }
+                                            }
+
+                                        }
                                 )
                             }
 

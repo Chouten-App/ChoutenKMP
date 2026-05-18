@@ -1,6 +1,6 @@
 package com.inumaki.chouten.common
 
-import com.inumaki.core.ui.model.Runtime
+import dev.chouten.core.repository.Runtime
 
 object RuntimeManager {
     var currentRuntime: Runtime? = null

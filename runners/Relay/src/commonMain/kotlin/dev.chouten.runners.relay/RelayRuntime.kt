@@ -2,14 +2,15 @@ package dev.chouten.runners.relay
 
 import com.inumaki.core.ui.model.ChoutenError
 import com.inumaki.core.ui.model.ChoutenErrorSerializer
-import com.inumaki.core.ui.model.DiscoverList
-import com.inumaki.core.ui.model.HostEnvironment
-import com.inumaki.core.ui.model.HttpMethod
-import com.inumaki.core.ui.model.PosterData
+import dev.chouten.core.repository.DiscoverList
+import dev.chouten.core.repository.HostEnvironment
+import dev.chouten.core.repository.HttpMethod
+import dev.chouten.core.repository.PosterData
 import com.inumaki.core.ui.model.Result
 import com.inumaki.core.ui.model.ResultSerializer
-import com.inumaki.core.ui.model.Runtime
-import com.inumaki.core.ui.model.SourceModule
+import dev.chouten.core.repository.InstalledModule
+import dev.chouten.core.repository.Runtime
+import dev.chouten.core.repository.SourceModule
 import io.github.charlietap.chasm.embedding.dsl.functionImport
 import io.github.charlietap.chasm.embedding.dsl.imports
 import io.github.charlietap.chasm.embedding.dsl.memoryImport
@@ -368,6 +369,10 @@ class RelayRuntime : Runtime {
         filters: List<String>
     ): List<PosterData> {
         TODO("Not yet implemented")
+    }
+
+    override fun supports(module: InstalledModule): Boolean {
+        return module.localPath.contains(".wasm")
     }
 }
 

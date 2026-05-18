@@ -1,9 +1,8 @@
-package com.inumaki.core.ui.model
+package dev.chouten.core.repository
 
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
 import com.fleeksoft.ksoup.nodes.Element
-import dev.chouten.core.repository.httpClient
 import io.ktor.client.request.request
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.Dispatchers
@@ -11,29 +10,12 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Clock
 import kotlin.time.Instant
-
-
-sealed interface RtValue {
-    data class RtObject(val fields: Map<String, RtValue>) : RtValue
-    data class RtArray(val items: List<RtValue>) : RtValue
-    data class RtString(val value: String) : RtValue
-    data class RtNumber(val value: Double) : RtValue
-    data class RtBool(val value: Boolean) : RtValue
-    data object RtNull : RtValue
-}
-
-sealed class SourceOperation(val functionName: String) {
-    data object Search : SourceOperation("search")
-    data object Details : SourceOperation("details")
-    data object Chapters : SourceOperation("chapters")
-    data object Pages : SourceOperation("pages")
-    data object Stream : SourceOperation("stream")
-}
 
 data class SourceModule(
     val id: String,
@@ -247,4 +229,5 @@ interface Runtime {
     fun discover(): List<DiscoverList>
 
     fun search(query: String, filters: List<String>): List<PosterData>
+    fun supports(module: InstalledModule): Boolean
 }

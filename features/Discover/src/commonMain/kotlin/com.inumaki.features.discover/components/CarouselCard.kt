@@ -30,7 +30,7 @@ import coil3.compose.AsyncImage
 import com.inumaki.core.ui.components.AppImage
 import com.inumaki.core.ui.components.ConcentricShape
 import com.inumaki.core.ui.modifiers.shiningBorder
-import com.inumaki.core.ui.model.PosterData
+import dev.chouten.core.repository.PosterData
 import com.inumaki.core.ui.theme.AppTheme
 
 @Composable

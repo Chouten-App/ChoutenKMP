@@ -1,10 +1,11 @@
 package dev.chouten.runners.local
 
-import com.inumaki.core.ui.model.DiscoverList
-import com.inumaki.core.ui.model.HostEnvironment
-import com.inumaki.core.ui.model.PosterData
-import com.inumaki.core.ui.model.Runtime
-import com.inumaki.core.ui.model.SourceModule
+import dev.chouten.core.repository.DiscoverList
+import dev.chouten.core.repository.HostEnvironment
+import dev.chouten.core.repository.InstalledModule
+import dev.chouten.core.repository.PosterData
+import dev.chouten.core.repository.Runtime
+import dev.chouten.core.repository.SourceModule
 
 class LocalRuntime: Runtime {
     override suspend fun load(module: SourceModule) {
@@ -31,6 +32,10 @@ class LocalRuntime: Runtime {
         filters: List<String>
     ): List<PosterData> {
         TODO("Not yet implemented")
+    }
+
+    override fun supports(module: InstalledModule): Boolean {
+        return false
     }
 
 }

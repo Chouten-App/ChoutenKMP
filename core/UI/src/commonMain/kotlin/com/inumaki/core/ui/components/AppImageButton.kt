@@ -21,6 +21,12 @@ import coil3.compose.AsyncImage
 import com.inumaki.core.ui.model.HomeRoute
 import com.inumaki.core.ui.modifiers.shiningBorder
 import com.inumaki.core.ui.theme.AppTheme
+import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 
 
 @Composable
@@ -29,7 +35,7 @@ fun AppImageButton(imageUrl: String, angle: Float, width: Dp, radius: Dp, modifi
         modifier = modifier
             .width(width)
             .aspectRatio(1f)
-            .shiningBorder(angle, radius)
+            .shiningBorder(angle, AppTheme.layout.iconSize.width / 2, background)
             .clip(RoundedCornerShape(50))
             .background(background)
             .padding(12.dp)

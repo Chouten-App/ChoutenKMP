@@ -16,16 +16,17 @@ import com.inumaki.chouten.HeadingSource
 import com.inumaki.chouten.common.getFeatures
 import com.inumaki.chouten.dev.DevClientManager
 import com.inumaki.core.ui.model.AppConfig
-import com.inumaki.core.ui.model.DefaultHostEnvironment
+import dev.chouten.core.repository.DefaultHostEnvironment
 import com.inumaki.core.ui.model.DiscoverRoute
 import com.inumaki.core.ui.model.GlobalState
-import com.inumaki.core.ui.model.HostEnvironment
+import dev.chouten.core.repository.HostEnvironment
 import com.inumaki.core.ui.model.NavigationScope
-import com.inumaki.core.ui.model.SourceModule
+import dev.chouten.core.repository.SourceModule
 import com.inumaki.core.ui.theme.AppTheme
 import dev.chouten.core.repository.FileRepositoryStorage
 import dev.chouten.core.repository.FileStore
 import dev.chouten.core.repository.KtorRepositoryRemote
+import dev.chouten.core.repository.ModuleManager
 import dev.chouten.core.repository.RepositoryManager
 import dev.chouten.core.repository.httpClient
 import dev.chouten.runners.local.LocalRuntime
@@ -73,6 +74,14 @@ fun AppRoot(
         repositoryRemote
     )
 
+    val moduleManager = ModuleManager(
+        repositoryManager = repositoryManager,
+        runtimes = listOf(
+            LocalRuntime(),
+            RelayRuntime()
+        )
+    )
+
     val runtime = remember { RelayRuntime() }
 
     // Initialize heading observer
@@ -111,7 +120,8 @@ fun AppRoot(
                 dataStore = dataStore,
                 devClientManager = devClientManager,
                 runtime,
-                repositoryManager
+                repositoryManager,
+                moduleManager
             )
         }
     }

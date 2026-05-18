@@ -138,7 +138,12 @@ data class TransitionState(
     val dragOffsetX: Float = 0f,
     val dragOffsetY: Float = 0f,
     val scaleX: Float = 0f,
-    val scaleY: Float = 1f
+    val scaleY: Float = 1f,
+    val isCollapsing: Boolean = false,
+    val collapseFromOffsetX: Float = 0f,
+    val collapseFromOffsetY: Float = 0f,
+    val collapseFromScaleY: Float = 1f,
+    val collapseFromScaleX: Float = 1f,
 )
 
 
@@ -168,6 +173,10 @@ class TransitionController(
     val isExpanded: Boolean
         get() = activeIdentifier != null
 
+    private val collapseProgress = Animatable(0f)
+    val collapseProgressValue: Float
+        get() = collapseProgress.value
+
     suspend fun expand(identifier: String) {
         activeIdentifier = identifier
         if (!state.isDragging) {
@@ -179,12 +188,30 @@ class TransitionController(
     }
 
     suspend fun collapse() {
-        if (!state.isDragging) {
-            progress.animateTo(
-                targetValue = 0f,
-                animationSpec = tween(500, easing = FastOutSlowInEasing)
-            )
-        }
+        // Capture where the sheet is right now
+        val fromOffsetX = state.dragOffsetX
+        val fromOffsetY = state.scaleX * -80f // mirror your translationY formula
+        val fromScaleY = state.scaleY
+        val fromScaleX = lerp(1f, 0.7f, state.scaleX)
+
+        state = state.copy(
+            isDragging = false,
+            isCollapsing = true,
+            collapseFromOffsetX = fromOffsetX,
+            collapseFromOffsetY = fromOffsetY,
+            collapseFromScaleY = fromScaleY,
+            collapseFromScaleX = fromScaleX
+        )
+
+        collapseProgress.snapTo(0f)
+        collapseProgress.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(400, easing = FastOutSlowInEasing)
+        )
+
+        // Now hand back to normal progress animation
+        state = state.copy(isCollapsing = false)
+        progress.snapTo(0f)
         activeIdentifier = null
     }
 
@@ -472,7 +499,7 @@ class MatchedTransitionScopeImpl(
                 .alpha(if (isActive) 0f else 1f)
                 .clip(RoundedCornerShape(50))
                 .clickable { controller.toggle(identifier) }
-                .shiningBorder(60f, 40.dp)
+                //.shiningBorder(60f, 40.dp)
         ) {
             content()
         }
@@ -545,6 +572,8 @@ fun AppScaffold(
     }
 
 
+
+
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -572,6 +601,18 @@ fun AppScaffold(
             val t = controller.getCurrentProgress()
             val activeSheet = sheets[activeId]
 
+            val isCollapsing = controller.state.isCollapsing
+            val collapseProgress = controller.collapseProgressValue
+
+            val sizeScaleX = when {
+                isCollapsing -> lerp(controller.state.collapseFromScaleX, 0f, collapseProgress)
+                else -> lerp(1f, 0.7f, controller.state.scaleX)
+            }
+            val sizeScaleY = when {
+                isCollapsing -> lerp(controller.state.collapseFromScaleY, 0f, collapseProgress)
+                else -> controller.state.scaleY
+            }
+
             if (activeSheet != null) {
                 val geometry = geometryCalculator.calculate(
                     t = t,
@@ -591,16 +632,21 @@ fun AppScaffold(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
                             .graphicsLayer {
-                                translationX = geometry.x + if (controller.state.isDragging) controller.state.dragOffsetX else 0f
-                                translationY = geometry.y + if (controller.state.isDragging) controller.state.scaleX * -80f else 0f//geometry.y + if (controller.state.isDragging) controller.state.dragOffsetY else 0f
+                                translationX = when {
+                                    isCollapsing -> lerp(controller.state.collapseFromOffsetX, activeSheet.sourcePosition.x, collapseProgress)
+                                    controller.state.isDragging -> geometry.x + controller.state.dragOffsetX
+                                    else -> geometry.x
+                                }
+                                translationY = when {
+                                    isCollapsing -> lerp(controller.state.collapseFromOffsetY, activeSheet.sourcePosition.y, collapseProgress)
+                                    controller.state.isDragging -> geometry.y + controller.state.scaleX * -80f
+                                    else -> geometry.y
+                                }
                             }
                             .width(
-                                geometry.width * lerp(
-                                    1f, 0.7f,
-                                    controller.state.scaleX
-                                )
+                                geometry.width * sizeScaleX
                             )
-                            .height(geometry.height * controller.state.scaleY)
+                            .height(geometry.height * sizeScaleY)
                             .clip(
                                 RoundedCornerShape(
                                     topStart = geometry.topRadius,
@@ -641,20 +687,23 @@ fun AppScaffold(
                                         )
                                     },
                                     onDragEnd = {
-                                        controller.updateDragState(isDragging = false)
-                                        if (controller.state.scaleX > 0.5f) {
+                                        println("Controller State -> ${controller.state}")
+                                        if (controller.state.scaleY < 0.55f) {
                                             //controller.snapProgress(1f)
                                             coroutineScope.launch { controller.collapse() }
+                                            controller.updateDragState(isDragging = false)
                                         } else {
                                             coroutineScope.launch { controller.expand(activeId) }
+                                            controller.updateDragState(isDragging = false)
                                         }
                                     },
                                     onDragCancel = {
-                                        controller.updateDragState(isDragging = false)
-                                        if (controller.state.scaleX > 0.5f) {
+                                        if (controller.state.scaleY < 0.55f) {
                                             //controller.snapProgress(1f)
+                                            controller.updateDragState(isDragging = false)
                                             coroutineScope.launch { controller.collapse() }
                                         } else {
+                                            controller.updateDragState(isDragging = false)
                                             coroutineScope.launch { controller.expand(activeId) }
                                         }
                                     }
@@ -663,6 +712,7 @@ fun AppScaffold(
                     ) {
                         Box(
                             modifier = Modifier
+                                .align(Alignment.TopCenter)
                                 .graphicsLayer {
                                     alpha = segment(geometry.alpha, 0.5f, 1f)
                                 }
@@ -674,9 +724,13 @@ fun AppScaffold(
 
                             Box(
                                 modifier = Modifier
-                                    .requiredSize(geometry.width, geometry.height) // full original size
-                                    .scale(contentScale)                           // scale down visually + for hit-testing
+                                    .requiredSize(geometry.width, geometry.height)
                                     .align(Alignment.TopCenter)
+                                    .graphicsLayer {
+                                        scaleX = contentScale
+                                        scaleY = contentScale
+                                        transformOrigin = TransformOrigin(0.5f, 0f)
+                                    }
                             ) {
                                 activeSheet.expandedContent(this)
                             }
@@ -688,9 +742,9 @@ fun AppScaffold(
                                     scaleX = 1 + geometry.scale
                                     scaleY = 1 + geometry.scale
                                     alpha = 1f - segment(geometry.alpha, 0f, 0.5f)
-                                    transformOrigin = TransformOrigin.Center
+                                    transformOrigin = TransformOrigin(0.5f, 0f)
                                 }
-                                .align(Alignment.Center)
+                                .align(Alignment.TopCenter)
                         ) {
                             activeSheet.sourceContent?.let { it(this) }
                         }

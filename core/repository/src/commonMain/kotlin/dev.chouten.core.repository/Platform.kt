@@ -3,6 +3,7 @@ package dev.chouten.core.repository
 expect fun currentTimeMillis(): Long
 
 expect object FileStore {
+    fun documentsDir(): String
     suspend fun write(
         path: String,
         bytes: ByteArray

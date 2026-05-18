@@ -11,6 +11,15 @@ actual fun currentTimeMillis(): Long = (NSDate().timeIntervalSince1970 * 1000).t
 
 actual object FileStore {
 
+    actual fun documentsDir(): String {
+        val fileManager = NSFileManager.defaultManager
+        val documentsUrl = fileManager.URLsForDirectory(
+            directory = NSDocumentDirectory,
+            inDomains = NSUserDomainMask
+        ).first() as NSURL
+        return documentsUrl.path ?: ""
+    }
+
     @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
     actual suspend fun write(path: String, bytes: ByteArray) {
         val fileManager = NSFileManager.defaultManager
