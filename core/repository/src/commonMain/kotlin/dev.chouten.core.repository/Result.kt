@@ -1,4 +1,4 @@
-package com.inumaki.core.ui.model
+package dev.chouten.core.repository
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName

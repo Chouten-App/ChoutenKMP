@@ -226,7 +226,7 @@ interface Runtime {
     suspend fun load(module: SourceModule)
     suspend fun initialize(host: HostEnvironment? = null)
 
-    fun discover(): List<DiscoverList>
+    fun discover(): Result<List<DiscoverList>, ChoutenError>
 
     fun search(query: String, filters: List<String>): List<PosterData>
     fun supports(module: InstalledModule): Boolean

@@ -1,9 +1,11 @@
 package dev.chouten.runners.local
 
+import dev.chouten.core.repository.ChoutenError
 import dev.chouten.core.repository.DiscoverList
 import dev.chouten.core.repository.HostEnvironment
 import dev.chouten.core.repository.InstalledModule
 import dev.chouten.core.repository.PosterData
+import dev.chouten.core.repository.Result
 import dev.chouten.core.repository.Runtime
 import dev.chouten.core.repository.SourceModule
 
@@ -16,14 +18,15 @@ class LocalRuntime: Runtime {
         // Nothing to do
     }
 
-    override fun discover(): List<DiscoverList> {
+    override fun discover(): Result<List<DiscoverList>, ChoutenError> {
         // Get local files
-        return listOf(
-            DiscoverList(
-                title = "Local files",
-                section_type = "GRID",
-                list = emptyList()
-            ),
+        return Result.Ok(listOf(
+                DiscoverList(
+                    title = "Local files",
+                    section_type = "GRID",
+                    list = emptyList()
+                )
+            )
         )
     }
 

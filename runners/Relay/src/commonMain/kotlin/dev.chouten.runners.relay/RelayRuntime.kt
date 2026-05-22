@@ -1,53 +1,35 @@
 package dev.chouten.runners.relay
 
-import com.inumaki.core.ui.model.ChoutenError
-import com.inumaki.core.ui.model.ChoutenErrorSerializer
+import com.github.michaelbull.result.Err
+import dev.chouten.core.repository.ChoutenError
+import dev.chouten.core.repository.ChoutenErrorSerializer
 import dev.chouten.core.repository.DiscoverList
 import dev.chouten.core.repository.HostEnvironment
 import dev.chouten.core.repository.HttpMethod
 import dev.chouten.core.repository.PosterData
-import com.inumaki.core.ui.model.Result
-import com.inumaki.core.ui.model.ResultSerializer
+import dev.chouten.core.repository.Result
+import dev.chouten.core.repository.ResultSerializer
 import dev.chouten.core.repository.InstalledModule
 import dev.chouten.core.repository.Runtime
 import dev.chouten.core.repository.SourceModule
 import io.github.charlietap.chasm.embedding.dsl.functionImport
-import io.github.charlietap.chasm.embedding.dsl.imports
-import io.github.charlietap.chasm.embedding.dsl.memoryImport
-import io.github.charlietap.chasm.embedding.exports
-import io.github.charlietap.chasm.embedding.function
 import io.github.charlietap.chasm.embedding.instance
 import io.github.charlietap.chasm.embedding.invoke
-import io.github.charlietap.chasm.embedding.memory
 import io.github.charlietap.chasm.embedding.memory.readBytes
-import io.github.charlietap.chasm.embedding.memory.readNullTerminatedUtf8String
 import io.github.charlietap.chasm.embedding.memory.readUtf8String
-import io.github.charlietap.chasm.embedding.memory.writeByte
 import io.github.charlietap.chasm.embedding.memory.writeBytes
 import io.github.charlietap.chasm.embedding.memory.writeInt
-import io.github.charlietap.chasm.embedding.memory.writeUtf8String
 import io.github.charlietap.chasm.embedding.module
-import io.github.charlietap.chasm.embedding.shapes.ChasmResult
 import io.github.charlietap.chasm.embedding.shapes.Import
 import io.github.charlietap.chasm.embedding.shapes.Instance
 import io.github.charlietap.chasm.embedding.shapes.Memory
-import io.github.charlietap.chasm.embedding.shapes.Store
 import io.github.charlietap.chasm.embedding.shapes.Wasm32Allocator
 import io.github.charlietap.chasm.embedding.shapes.getOrElse
 import io.github.charlietap.chasm.embedding.shapes.getOrNull
 import io.github.charlietap.chasm.embedding.shapes.onError
 import io.github.charlietap.chasm.embedding.store
-import io.github.charlietap.chasm.runtime.value.ExecutionValue
 import io.github.charlietap.chasm.runtime.value.NumberValue
-import io.github.charlietap.chasm.type.AddressType
-import io.github.charlietap.chasm.type.Limits
-import io.github.charlietap.chasm.type.MemoryType
-import io.github.charlietap.chasm.type.SharedStatus
-import io.github.charlietap.chasm.type.ValueType
-import io.ktor.http.ContentType.Application.Json
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.json.Json
 
 class RelayRuntime : Runtime {
     val store = store()
@@ -310,7 +292,7 @@ class RelayRuntime : Runtime {
         hostEnvironment = host
     }
 
-    override fun discover(): List<DiscoverList> {
+    override fun discover(): Result<List<DiscoverList>, ChoutenError> {
         if (instance != null) {
             val result = invoke(store, instance!!, "discover_impl")
 
@@ -324,7 +306,7 @@ class RelayRuntime : Runtime {
                 val json = bytes.decodeToString()
 
                 if (json.isEmpty()) {
-                    return emptyList()
+                    return Result.Err(ChoutenError.Host("discover", "Json return value is empty"))
                 }
                 val serializer = ResultSerializer(
                     ListSerializer(DiscoverList.serializer()),
@@ -333,15 +315,10 @@ class RelayRuntime : Runtime {
 
                 val result: Result<List<DiscoverList>, ChoutenError> = kotlinx.serialization.json.Json.decodeFromString(serializer, json)
 
-                return when (result) {
-                    is Result.Ok -> result.value
-                    is Result.Err -> {
-                        emptyList()
-                    }
-                }
+                return result
             }
         }
-        return emptyList()
+        return Result.Err(ChoutenError.Host("discover", "No instance was found."))
     }
 
     private fun readBytes(offset: Int, length: Int): ByteArray {

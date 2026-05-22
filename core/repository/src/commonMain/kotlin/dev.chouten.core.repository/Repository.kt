@@ -7,6 +7,9 @@ import kotlinx.serialization.Serializable
 data class Repository(
     val url: String,
     val lastUpdated: Long,
+    val name: String,
+    val description: String,
+    val iconPath: String,
     val modules: List<RemoteModule>
 )
 
@@ -28,11 +31,14 @@ data class InstalledModule(
     val version: String,
     val localPath: String,
     val imagePath: String,
-    val sourceRepo: String
+    val sourceRepo: String,
 )
 
 @Serializable
 data class RepoResponse(
+    val name: String,
+    val description: String,
+    val iconUrl: String,
     val modules: List<ModuleDto>
 )
 

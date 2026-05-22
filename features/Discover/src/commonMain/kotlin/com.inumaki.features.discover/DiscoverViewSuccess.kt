@@ -41,7 +41,7 @@ fun DiscoverViewSuccess(items: List<DiscoverList>, angle: Float, backdrop: Layer
         horizontalAlignment = Alignment.Start
     ) {
         LazyColumn(
-            contentPadding = PaddingValues(top = 92.dp, bottom = 100.dp),
+            contentPadding = PaddingValues(top = 132.dp, bottom = 100.dp),
         ) {
             items.forEach { item ->
                 when (item.section_type) {

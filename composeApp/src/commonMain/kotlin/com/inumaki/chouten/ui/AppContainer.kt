@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -43,6 +44,7 @@ import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -75,7 +77,9 @@ import com.inumaki.core.ui.theme.AppTheme
 import dev.chouten.core.repository.InstalledModule
 import dev.chouten.core.repository.ModuleManager
 import dev.chouten.core.repository.RemoteModule
+import dev.chouten.core.repository.Repository
 import dev.chouten.core.repository.RepositoryManager
+import dev.chouten.core.repository.RepositoryRemote
 import dev.chouten.features.settings.SettingsView
 import dev.chouten.features.settings.SettingsViewModel
 import kotlinx.coroutines.launch
@@ -114,16 +118,18 @@ fun AppContainer(
     //val showSheetOverlay = navigationState.topRoute?.presentationStyle() == PresentationStyle.Sheet
     val controller = rememberTransitionController()
     var allModules by remember { mutableStateOf<List<Pair<InstalledModule?, RemoteModule>>>(emptyList()) }
+    var allRepos by remember { mutableStateOf<List<Repository>>(emptyList()) }
 
     val activeModule by moduleManager.activeModule.collectAsState()
 
     LaunchedEffect(Unit) {
         repositoryManager.refreshRepositories()
         allModules = repositoryManager.getAllModules()
+        allRepos = repositoryManager.getAllRepos()
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        AppScaffold(controller = controller, appConfig) {
+        AppScaffold(controller = controller, appConfig, repositoryManager, moduleManager) {
             Box(modifier = Modifier.fillMaxSize()) {
                 // Primary navigation host
                 AppNavHost(appConfig = appConfig)
@@ -134,7 +140,8 @@ fun AppContainer(
                         navScope = appConfig.navScope,
                         devClientManager,
                         runtime,
-                        repositoryManager
+                        repositoryManager,
+                        moduleManager
                     )
                 }
             }
@@ -188,92 +195,146 @@ fun AppContainer(
                     modifier = Modifier
                         .padding(top = 50.dp)
                         .padding(20.dp)
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(AppTheme.colors.overlay)
-                        .padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    itemsIndexed(allModules) { index, (local, remote) ->
-                        val moduleState = if (local == null) "GET" else if (local.version != remote.version) "UPDATE" else "REFRESH"
-                        Column {
+                    itemsIndexed(allRepos) { index, repo ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(AppTheme.colors.overlay)
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                AppAsyncImage(
+                                    repo.iconPath,
+                                    modifier = Modifier
+                                        .width(64.dp)
+                                        .height(64.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                )
+
+                                Column {
+                                    Text(repo.name, style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold))
+                                    Text("N/A", modifier = Modifier.alpha(0.7f))
+                                }
+                            }
+
+                            Text(repo.description, modifier = Modifier.alpha(0.7f))
+                        }
+                    }
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(AppTheme.colors.overlay)
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            allModules.forEachIndexed { index, (local, remote) ->
+                                val moduleState =
+                                    if (local == null) "GET" else if (local.version != remote.version) "UPDATE" else "REFRESH"
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
                                 ) {
-                                    val iconPath = local?.imagePath ?: remote.iconUrl
-                                    iconPath?.let {
-                                        AppAsyncImage(
-                                            it,
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            val iconPath = local?.imagePath ?: remote.iconUrl
+                                            iconPath?.let {
+                                                AppAsyncImage(
+                                                    it,
+                                                    modifier = Modifier
+                                                        .width(44.dp)
+                                                        .height(44.dp)
+                                                        .clip(RoundedCornerShape(12.dp))
+                                                        .clickable {
+                                                            local?.let { module ->
+                                                                scope.launch {
+                                                                    moduleManager.loadModule(
+                                                                        module.id
+                                                                    )
+                                                                    moduleManager.activateModule(
+                                                                        module.id
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                )
+                                            }
+                                            Column {
+                                                Text(remote.name)
+                                                Text(remote.author, modifier = Modifier.alpha(0.7f))
+                                            }
+                                        }
+
+                                        Text(
+                                            moduleState,
+                                            style = TextStyle(
+                                                color = AppTheme.colors.fg,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 12.sp
+                                            ),
                                             modifier = Modifier
-                                                .width(44.dp)
-                                                .height(44.dp)
-                                                .border(if (activeModule?.id == local?.id) 1.dp else 0.dp, AppTheme.colors.accent, RoundedCornerShape(8.dp))
-                                                .clip(RoundedCornerShape(8.dp))
+                                                .clip(RoundedCornerShape(50))
+                                                .background(AppTheme.colors.accent)
+                                                .padding(8.dp, 4.dp)
                                                 .clickable {
-                                                    local?.let { module ->
-                                                        scope.launch {
-                                                            moduleManager.loadModule(module.id)
-                                                            moduleManager.activateModule(module.id)
+                                                    when (moduleState) {
+                                                        "GET" -> {
+                                                            println("Installing ${remote.name}")
+
+                                                            scope.launch {
+                                                                repositoryManager.installModule(
+                                                                    remote.id
+                                                                )
+                                                                allModules =
+                                                                    repositoryManager.getAllModules()
+                                                            }
+                                                        }
+
+                                                        "REFRESH" -> {
+                                                            println("Refreshing ${remote.name}")
+
+                                                            scope.launch {
+                                                                repositoryManager.installModule(
+                                                                    remote.id
+                                                                )
+                                                                allModules =
+                                                                    repositoryManager.getAllModules()
+                                                            }
+                                                        }
+
+                                                        "UPDATE" -> {
+
                                                         }
                                                     }
+
                                                 }
                                         )
                                     }
-                                    Column {
-                                        Text(remote.name)
-                                        Text(remote.author, modifier = Modifier.alpha(0.7f))
+
+                                    if (index < allModules.size - 1) {
+                                        HorizontalDivider(
+                                            Modifier.padding(start = 52.dp, top = 14.dp),
+                                            color = AppTheme.colors.border,
+                                            thickness = 1.dp
+                                        )
                                     }
                                 }
-
-                                Text(
-                                    moduleState,
-                                    style = TextStyle(
-                                        color = AppTheme.colors.accent,
-                                        fontWeight = FontWeight.Medium
-                                    ),
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(50))
-                                        .background(AppTheme.colors.border)
-                                        .padding(8.dp, 4.dp)
-                                        .clickable {
-                                            when (moduleState) {
-                                                "GET" -> {
-                                                    println("Installing ${remote.name}")
-
-                                                    scope.launch {
-                                                        repositoryManager.installModule(remote.id)
-                                                        allModules = repositoryManager.getAllModules()
-                                                    }
-                                                }
-                                                "REFRESH" -> {
-                                                    println("Refreshing ${remote.name}")
-
-                                                    scope.launch {
-                                                        repositoryManager.installModule(remote.id)
-                                                        allModules = repositoryManager.getAllModules()
-                                                    }
-                                                }
-                                                "UPDATE" -> {
-
-                                                }
-                                            }
-
-                                        }
-                                )
-                            }
-
-                            if (index < allModules.size - 1) {
-                                HorizontalDivider(
-                                    Modifier.padding(start = 52.dp, top = 14.dp),
-                                    color = AppTheme.colors.border,
-                                    thickness = 1.dp
-                                )
                             }
                         }
                     }

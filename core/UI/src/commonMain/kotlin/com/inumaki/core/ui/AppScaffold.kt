@@ -102,6 +102,8 @@ import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
+import dev.chouten.core.repository.ModuleManager
+import dev.chouten.core.repository.RepositoryManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -538,6 +540,8 @@ class MatchedTransitionScopeImpl(
 fun AppScaffold(
     controller: TransitionController = rememberTransitionController(),
     appConfig: AppConfig,
+    repositoryManager: RepositoryManager,
+    moduleManager: ModuleManager,
     geometryCalculator: TransitionGeometryCalculator = remember { TransitionGeometryCalculator() },
     backgroundColor: Color = Color(0xff0c0c0c),
     containerColor: Color = Color(0xff171717),
@@ -592,7 +596,7 @@ fun AppScaffold(
                 content(scope)
             }
 
-            AppTopBar(topConfig, 0f, modifier = Modifier.align(Alignment.TopCenter))
+            AppTopBar(topConfig, 0f, repositoryManager, moduleManager, modifier = Modifier.align(Alignment.TopCenter))
             AppBottomBar(0f, appConfig.navController, modifier = Modifier.align(Alignment.BottomCenter))
         }
 
@@ -759,40 +763,4 @@ fun AppScaffold(
     }
 }
 
-
-@Suppress("UnusedMaterial3ScaffoldPaddingParameter")
-@Composable
-fun AppScaffoldOld(
-    heading: StateFlow<Float>,
-    appConfig: AppConfig,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    val angle = heading.collectAsState()
-    val lastFullscreen = rememberLastFullscreenRoute(appConfig.navController, appConfig.featureEntries)
-
-    val backStackEntry by appConfig.navController.currentBackStackEntryAsState()
-
-    val currentRoute: AppRoute? = backStackEntry?.let { entry ->
-        appConfig.featureEntries
-            .asSequence()
-            .mapNotNull { feature -> feature.tryCreateRoute(entry) }
-            .firstOrNull()
-    }
-
-    val topConfig = currentRoute?.let { route ->
-        appConfig.uiConfigProvider.asSequence().mapNotNull { it.topBarConfig(route = route, navController = appConfig.navController) }
-            .firstOrNull()
-    }
-
-    Scaffold(
-        topBar = { AppTopBar(topConfig, angle.value) },
-        bottomBar = { AppBottomBar(angle.value, appConfig.navController) },
-        containerColor = AppTheme.colors.background,
-        contentColor = AppTheme.colors.fg,
-        modifier = modifier.fillMaxSize()
-    ) {  padding ->
-        content()
-    }
-}
 

@@ -1,9 +1,8 @@
-package com.inumaki.core.ui.model
+package dev.chouten.core.repository
 
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -13,6 +12,7 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlin.collections.contains
+
 
 @Serializable(with = ChoutenErrorSerializer::class)
 sealed class ChoutenError {

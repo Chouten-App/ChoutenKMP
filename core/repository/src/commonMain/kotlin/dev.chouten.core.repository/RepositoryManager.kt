@@ -35,7 +35,7 @@ class RepositoryManager(
             .first { it.id == moduleId }
 
         val wasm = remote.downloadModule(module.wasmUrl)
-        val wasmPath = saveToDisk(module.id, module.version, wasm)
+        val wasmPath = saveToDisk(module.id, module.version, wasm, "module.wasm")
 
         val imageBytes = remote.downloadImage(module.iconUrl ?: "")
         val imagePath = saveImageToDisk(module.id, module.version, imageBytes)
@@ -109,6 +109,10 @@ class RepositoryManager(
         }
     }
 
+    suspend fun getAllRepos(): List<Repository> {
+        return storage.getRepositories()
+    }
+
     suspend fun updateModule(moduleId: String) {
         removeModule(moduleId)
         installModule(moduleId)
@@ -123,9 +127,9 @@ class RepositoryManager(
         }?.url ?: error("Module not found")
     }
 
-    suspend fun saveToDisk(moduleId: String, version: String, bytes: ByteArray): String {
+    suspend fun saveToDisk(moduleId: String, version: String, bytes: ByteArray, name: String): String {
         val dir = "$base/modules/${moduleId}/$version/"
-        val final = "$dir/artifact"
+        val final = "$dir/$name"
 
         FileStore.createDirectories(dir)
         FileStore.write(final, bytes)
